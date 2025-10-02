@@ -1,4 +1,5 @@
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Tenants;
+using Microsoft.EntityFrameworkCore;
 
 namespace FoodDeliveryApi.FoodDeliveryApi.Infrastructure.Persistence;
 
@@ -7,6 +8,7 @@ public static class TenantSeeder
     public static async Task SeedAsync(FoodAppContext context)
     {
         // Check if tenants already exist
+      
        
         var tenants = new List<Tenant>
         {
@@ -48,7 +50,7 @@ public static class TenantSeeder
             )
         };
 
-        //context.Tenants.AddRange(tenants);
+       // context.Tenants.AddRange(tenants);
         await context.SaveChangesAsync();
     }
 }
