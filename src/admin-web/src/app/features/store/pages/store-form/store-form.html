@@ -1,0 +1,119 @@
+<div class="store-form-container">
+  <mat-card class="store-form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>store</mat-icon>
+        {{ hasExistingStore ? 'Store Settings' : 'Create Store' }}
+      </mat-card-title>
+      <mat-card-subtitle>
+        {{ hasExistingStore ? 'Update your store information' : 'Set up your store location and service area' }}
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading store settings...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error && !loading" class="error-container">
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-button color="primary" (click)="loadStore()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form *ngIf="!loading && !error" [formGroup]="storeForm" (ngSubmit)="onSubmit()" class="store-form">
+        <!-- Address Line -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address Line</mat-label>
+          <input matInput formControlName="addressLine" placeholder="Enter store address">
+          <mat-icon matSuffix>location_on</mat-icon>
+          <mat-error *ngIf="getFieldError('addressLine')">
+            {{ getFieldError('addressLine') }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- City -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" placeholder="Enter city">
+          <mat-icon matSuffix>location_city</mat-icon>
+          <mat-error *ngIf="getFieldError('city')">
+            {{ getFieldError('city') }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Coordinates Row -->
+        <div class="coordinates-row">
+          <mat-form-field appearance="outline" class="coordinate-field">
+            <mat-label>Latitude</mat-label>
+            <input matInput type="number" formControlName="lat" placeholder="e.g. 40.7128" step="any">
+            <mat-icon matSuffix>my_location</mat-icon>
+            <mat-error *ngIf="getFieldError('lat')">
+              {{ getFieldError('lat') }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="coordinate-field">
+            <mat-label>Longitude</mat-label>
+            <input matInput type="number" formControlName="lng" placeholder="e.g. -74.0060" step="any">
+            <mat-icon matSuffix>my_location</mat-icon>
+            <mat-error *ngIf="getFieldError('lng')">
+              {{ getFieldError('lng') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Service Radius -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Service Radius (km)</mat-label>
+          <input matInput type="number" formControlName="serviceRadiusKm" placeholder="Enter service radius" step="0.1" min="0.1" max="100">
+          <mat-icon matSuffix>radio_button_unchecked</mat-icon>
+          <mat-hint>Maximum service area radius in kilometers (0.1 - 100 km)</mat-hint>
+          <mat-error *ngIf="getFieldError('serviceRadiusKm')">
+            {{ getFieldError('serviceRadiusKm') }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Opening Hours Section -->
+        <div class="opening-hours-section">
+          <h3 class="section-title">
+            <mat-icon>schedule</mat-icon>
+            Opening Hours
+          </h3>
+          <app-opening-hours></app-opening-hours>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit" 
+            [disabled]="saving || storeForm.invalid"
+            class="save-button">
+            <mat-spinner *ngIf="saving" diameter="20" class="button-spinner"></mat-spinner>
+            <mat-icon *ngIf="!saving">{{ hasExistingStore ? 'save' : 'add' }}</mat-icon>
+            {{ saving ? 'Saving...' : (hasExistingStore ? 'Update Store' : 'Create Store') }}
+          </button>
+
+          <button 
+            mat-button 
+            type="button" 
+            (click)="loadStore()" 
+            [disabled]="saving"
+            *ngIf="hasExistingStore">
+            <mat-icon>refresh</mat-icon>
+            Reset
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

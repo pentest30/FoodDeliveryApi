@@ -1,0 +1,122 @@
+<mat-sidenav-container class="sidenav-container">
+  <!-- Sidebar -->
+  <mat-sidenav 
+    #drawer 
+    class="sidenav" 
+    fixedInViewport
+    [attr.role]="isHandset() ? 'dialog' : 'navigation'"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="!isHandset()">
+    
+    <mat-nav-list>
+      <!-- Home Section -->
+      <h3 matSubheader>{{ 'home' | translate }}</h3>
+      @for (item of sidenavItems[0].items; track item.path) {
+        <a mat-list-item 
+           [routerLink]="item.path" 
+           routerLinkActive="active-nav-item"
+           [matTooltip]="item.label | translate"
+           matTooltipPosition="right">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label | translate }}</span>
+        </a>
+      }
+      
+      <!-- Logout -->
+      <a mat-list-item (click)="logout()" [matTooltip]="'nav.logout' | translate" matTooltipPosition="right">
+        <mat-icon matListItemIcon>logout</mat-icon>
+        <span matListItemTitle>{{ 'nav.logout' | translate }}</span>
+      </a>
+
+      <mat-divider></mat-divider>
+
+      <!-- Resources Section -->
+      <h3 matSubheader>{{ 'resources' | translate }}</h3>
+      @for (item of sidenavItems[1].items; track item.path) {
+        <a mat-list-item 
+           [routerLink]="item.path" 
+           routerLinkActive="active-nav-item"
+           [matTooltip]="item.label | translate"
+           matTooltipPosition="right">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label | translate }}</span>
+        </a>
+      }
+
+      <mat-divider></mat-divider>
+
+      <!-- About (Footer) -->
+      <a mat-list-item [routerLink]="'/about'" routerLinkActive="active-nav-item" [matTooltip]="'about' | translate" matTooltipPosition="right">
+        <mat-icon matListItemIcon>info</mat-icon>
+        <span matListItemTitle>{{ 'about' | translate }}</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- Main Content -->
+  <mat-sidenav-content>
+    <!-- Top Toolbar -->
+    <mat-toolbar color="primary" class="top-toolbar">
+      <!-- Hamburger menu for mobile -->
+      @if (isHandset()) {
+        <button
+          type="button"
+          aria-label="Toggle sidenav"
+          mat-icon-button
+          (click)="drawer.toggle()">
+          <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+        </button>
+      }
+
+      <!-- Brand -->
+      <span class="brand">{{ 'brand' | translate }}</span>
+
+      <span class="spacer"></span>
+
+      <!-- Language Switcher -->
+      <button mat-icon-button [matMenuTriggerFor]="langMenu" [matTooltip]="'Language'">
+        <mat-icon>translate</mat-icon>
+      </button>
+      <mat-menu #langMenu="matMenu">
+        <button mat-menu-item (click)="switchLanguage('en')" [class.active-lang]="currentLang() === 'en'">
+          {{ 'lang.en' | translate }}
+        </button>
+        <button mat-menu-item (click)="switchLanguage('fr')" [class.active-lang]="currentLang() === 'fr'">
+          {{ 'lang.fr' | translate }}
+        </button>
+        <button mat-menu-item (click)="switchLanguage('ar')" [class.active-lang]="currentLang() === 'ar'">
+          {{ 'lang.ar' | translate }}
+        </button>
+      </mat-menu>
+
+      <!-- Notifications -->
+      <button mat-icon-button [matTooltip]="'Notifications'">
+        <mat-icon [matBadge]="notificationCount()" matBadgeColor="accent">notifications</mat-icon>
+      </button>
+
+      <!-- User Menu -->
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" [matTooltip]="'John Doe'">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <div class="user-info">
+          <span>John Doe</span>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item [routerLink]="'/account'">
+          <mat-icon>account_circle</mat-icon>
+          <span>{{ 'nav.account' | translate }}</span>
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>{{ 'nav.logout' | translate }}</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <!-- Content Area -->
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

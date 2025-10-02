@@ -1,0 +1,308 @@
+using FoodDeliveryApi.FoodDeliveryApi.Application.Commands;
+using FoodDeliveryApi.FoodDeliveryApi.Application.Handlers;
+using FoodDeliveryApi.FoodDeliveryApi.Application.Interfaces;
+using FoodDeliveryApi.FoodDeliveryApi.Domain.Common;
+using FoodDeliveryApi.FoodDeliveryApi.Domain.Orders;
+using FoodDeliveryApi.FoodDeliveryApi.Domain.ValueObjects;
+using Moq;
+using Xunit;
+
+namespace FoodDeliveryApi.Tests.Commands;
+
+public class FailOrderCommandHandlerTests
+{
+    private readonly Mock<IOrderRepository> _mockRepository;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<IDomainEventBus> _mockEventBus;
+    private readonly FailOrderCommandHandler _handler;
+
+    public FailOrderCommandHandlerTests()
+    {
+        _mockRepository = new Mock<IOrderRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockEventBus = new Mock<IDomainEventBus>();
+        _handler = new FailOrderCommandHandler(_mockRepository.Object, _mockUnitOfWork.Object, _mockEventBus.Object);
+    }
+
+    [Fact]
+    public async Task Handle_ValidCommand_ShouldFailOrderAndSaveChanges()
+    {
+        // Arrange
+        var order = CreatePendingOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "Restaurant closed" 
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act
+        await _handler.Handle(command);
+
+        // Assert
+        Assert.Equal(OrderStatus.Failed, order.Status);
+        _mockRepository.Verify(r => r.Update(order), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(_mockEventBus.Object, order), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ConfirmedOrder_ShouldFailOrderAndSaveChanges()
+    {
+        // Arrange
+        var order = CreateConfirmedOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "Restaurant closed" 
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act
+        await _handler.Handle(command);
+
+        // Assert
+        Assert.Equal(OrderStatus.Failed, order.Status);
+        _mockRepository.Verify(r => r.Update(order), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(_mockEventBus.Object, order), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ReadyForPickupOrder_ShouldFailOrderAndSaveChanges()
+    {
+        // Arrange
+        var order = CreateReadyForPickupOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "Restaurant closed" 
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act
+        await _handler.Handle(command);
+
+        // Assert
+        Assert.Equal(OrderStatus.Failed, order.Status);
+        _mockRepository.Verify(r => r.Update(order), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(_mockEventBus.Object, order), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_OutForDeliveryOrder_ShouldFailOrderAndSaveChanges()
+    {
+        // Arrange
+        var order = CreateOutForDeliveryOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "Delivery failed" 
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act
+        await _handler.Handle(command);
+
+        // Assert
+        Assert.Equal(OrderStatus.Failed, order.Status);
+        _mockRepository.Verify(r => r.Update(order), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(_mockEventBus.Object, order), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_DeliveredOrder_ShouldFailOrderAndSaveChanges()
+    {
+        // Arrange
+        var order = CreateDeliveredOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "Quality issue" 
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act
+        await _handler.Handle(command);
+
+        // Assert
+        Assert.Equal(OrderStatus.Failed, order.Status);
+        _mockRepository.Verify(r => r.Update(order), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(_mockEventBus.Object, order), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_OrderNotFound_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-NOTFOUND", 
+            Reason = "Restaurant closed" 
+        };
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-NOTFOUND")).ReturnsAsync((Order?)null);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _handler.Handle(command));
+        Assert.Contains("Order with External ID 'ORD-NOTFOUND' not found", exception.Message);
+    }
+
+    [Fact]
+    public async Task Handle_EmptyReason_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var order = CreatePendingOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "" // Empty reason
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _handler.Handle(command));
+    }
+
+    [Fact]
+    public async Task Handle_WhitespaceReason_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var order = CreatePendingOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "   " // Whitespace only
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _handler.Handle(command));
+    }
+
+    [Fact]
+    public async Task Handle_AlreadyCanceledOrder_ShouldFailOrderAndSaveChanges()
+    {
+        // Arrange
+        var order = CreateCanceledOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "System error" 
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act
+        await _handler.Handle(command);
+
+        // Assert
+        Assert.Equal(OrderStatus.Failed, order.Status);
+        _mockRepository.Verify(r => r.Update(order), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(_mockEventBus.Object, order), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_AlreadyFailedOrder_ShouldFailOrderAndSaveChanges()
+    {
+        // Arrange
+        var order = CreateFailedOrder();
+        var command = new FailOrderCommand 
+        { 
+            ExternalId = "ORD-12345", 
+            Reason = "Another failure" 
+        };
+        
+        _mockRepository.Setup(r => r.GetByExternalId("ORD-12345")).ReturnsAsync(order);
+
+        // Act
+        await _handler.Handle(command);
+
+        // Assert
+        Assert.Equal(OrderStatus.Failed, order.Status);
+        _mockRepository.Verify(r => r.Update(order), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(_mockEventBus.Object, order), Times.Once);
+    }
+
+    private Order CreatePendingOrder()
+    {
+        return Order.Place(
+            "ORD-12345",
+            "test-tenant",
+            new CustomerRef(Guid.NewGuid(), "John Doe", "+1234567890"),
+            new Address("123 Main St", "New York", "NY", "10001", 40.7128, -74.0060),
+            new List<FoodDeliveryApi.Domain.ValueObjects.OrderItem>
+            {
+                new FoodDeliveryApi.Domain.ValueObjects.OrderItem("Pizza", 2, new Money(15.99m, "USD"), new Money(31.98m, "USD"))
+            },
+            new Money(3.99m, "USD"),
+            30,
+            "Pizza Palace"
+        );
+    }
+
+    private Order CreateConfirmedOrder()
+    {
+        var order = CreatePendingOrder();
+        order.Confirm();
+        return order;
+    }
+
+    private Order CreateReadyForPickupOrder()
+    {
+        var order = CreateConfirmedOrder();
+        order.MarkReadyForPickup();
+        return order;
+    }
+
+    private Order CreateOutForDeliveryOrder()
+    {
+        var order = CreateReadyForPickupOrder();
+        order.MoveOutForDelivery();
+        return order;
+    }
+
+    private Order CreateDeliveredOrder()
+    {
+        var order = CreateOutForDeliveryOrder();
+        order.CompleteDelivery();
+        return order;
+    }
+
+    private Order CreateCanceledOrder()
+    {
+        var order = CreatePendingOrder();
+        order.Cancel("Customer requested cancellation");
+        return order;
+    }
+
+    private Order CreateFailedOrder()
+    {
+        var order = CreatePendingOrder();
+        order.Fail("Restaurant closed");
+        return order;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

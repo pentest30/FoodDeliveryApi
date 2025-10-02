@@ -1,0 +1,299 @@
+[
+  {
+    "id": "rest-001",
+    "name": "Pizza Palace",
+    "coverImageUrl": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop",
+    "rating": 4.5,
+    "etaMinutes": 25,
+    "distanceKm": 1.2,
+    "categories": ["Pizza", "Italian"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🍕",
+    "primaryColor": "#FF6B35",
+    "sections": [
+      {
+        "name": "Pizzas",
+        "items": [
+          {
+            "id": "pizza-001",
+            "name": "Margherita Pizza",
+            "description": "Fresh tomatoes, mozzarella, and basil",
+            "price": 18.00,
+            "imageUrl": "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-002",
+    "name": "Burger House",
+    "coverImageUrl": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop",
+    "rating": 4.2,
+    "etaMinutes": 30,
+    "distanceKm": 2.1,
+    "categories": ["Burgers", "American"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🍔",
+    "primaryColor": "#FF8C00",
+    "sections": [
+      {
+        "name": "Burgers",
+        "items": [
+          {
+            "id": "burger-001",
+            "name": "Classic Burger",
+            "description": "Beef patty with lettuce, tomato, and cheese",
+            "price": 12.00,
+            "imageUrl": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-003",
+    "name": "Sushi Zen",
+    "coverImageUrl": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop",
+    "rating": 4.8,
+    "etaMinutes": 35,
+    "distanceKm": 3.5,
+    "categories": ["Sushi", "Japanese"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🍣",
+    "primaryColor": "#4CAF50",
+    "sections": [
+      {
+        "name": "Sushi Rolls",
+        "items": [
+          {
+            "id": "sushi-001",
+            "name": "California Roll",
+            "description": "Crab, avocado, and cucumber",
+            "price": 15.00,
+            "imageUrl": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-004",
+    "name": "Taco Fiesta",
+    "coverImageUrl": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop",
+    "rating": 4.3,
+    "etaMinutes": 20,
+    "distanceKm": 1.8,
+    "categories": ["Mexican", "Tacos"],
+    "city": "São Paulo",
+    "isOpenNow": false,
+    "icon": "🌮",
+    "primaryColor": "#FF5722",
+    "sections": [
+      {
+        "name": "Tacos",
+        "items": [
+          {
+            "id": "taco-001",
+            "name": "Beef Taco",
+            "description": "Seasoned beef with fresh salsa",
+            "price": 8.00,
+            "imageUrl": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-005",
+    "name": "Pasta Corner",
+    "coverImageUrl": "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400&h=300&fit=crop",
+    "rating": 4.1,
+    "etaMinutes": 28,
+    "distanceKm": 2.7,
+    "categories": ["Italian", "Pasta"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🍝",
+    "primaryColor": "#9C27B0",
+    "sections": [
+      {
+        "name": "Pasta",
+        "items": [
+          {
+            "id": "pasta-001",
+            "name": "Spaghetti Carbonara",
+            "description": "Creamy pasta with bacon and parmesan",
+            "price": 16.50,
+            "imageUrl": "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-006",
+    "name": "Curry Delight",
+    "coverImageUrl": "https://images.unsplash.com/photo-1604908177076-9e1cc9c8b93f?w=400&h=300&fit=crop",
+    "rating": 4.6,
+    "etaMinutes": 32,
+    "distanceKm": 3.0,
+    "categories": ["Indian", "Curry"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🍛",
+    "primaryColor": "#FFC107",
+    "sections": [
+      {
+        "name": "Curries",
+        "items": [
+          {
+            "id": "curry-001",
+            "name": "Butter Chicken",
+            "description": "Rich tomato sauce with tender chicken",
+            "price": 20.00,
+            "imageUrl": "https://images.unsplash.com/photo-1604908177076-9e1cc9c8b93f?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-007",
+    "name": "Vegan Bites",
+    "coverImageUrl": "https://images.unsplash.com/photo-1601050690597-9f9d51ed2457?w=400&h=300&fit=crop",
+    "rating": 4.4,
+    "etaMinutes": 22,
+    "distanceKm": 1.5,
+    "categories": ["Vegan", "Healthy"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🥗",
+    "primaryColor": "#8BC34A",
+    "sections": [
+      {
+        "name": "Bowls",
+        "items": [
+          {
+            "id": "vegan-001",
+            "name": "Quinoa Salad",
+            "description": "Quinoa, chickpeas, avocado, and greens",
+            "price": 14.00,
+            "imageUrl": "https://images.unsplash.com/photo-1601050690597-9f9d51ed2457?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-008",
+    "name": "Steak House",
+    "coverImageUrl": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=400&h=300&fit=crop",
+    "rating": 4.7,
+    "etaMinutes": 40,
+    "distanceKm": 4.2,
+    "categories": ["Steak", "Grill"],
+    "city": "São Paulo",
+    "isOpenNow": false,
+    "icon": "🥩",
+    "primaryColor": "#795548",
+    "sections": [
+      {
+        "name": "Steaks",
+        "items": [
+          {
+            "id": "steak-001",
+            "name": "Ribeye Steak",
+            "description": "Juicy grilled ribeye with herbs",
+            "price": 35.00,
+            "imageUrl": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-009",
+    "name": "French Bakery",
+    "coverImageUrl": "https://images.unsplash.com/photo-1604503468506-0f91bba6b5e0?w=400&h=300&fit=crop",
+    "rating": 4.5,
+    "etaMinutes": 18,
+    "distanceKm": 0.9,
+    "categories": ["Bakery", "French"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🥐",
+    "primaryColor": "#E91E63",
+    "sections": [
+      {
+        "name": "Pastries",
+        "items": [
+          {
+            "id": "bakery-001",
+            "name": "Croissant",
+            "description": "Flaky buttery croissant",
+            "price": 5.50,
+            "imageUrl": "https://images.unsplash.com/photo-1604503468506-0f91bba6b5e0?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-010",
+    "name": "Seafood Shack",
+    "coverImageUrl": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=400&h=300&fit=crop",
+    "rating": 4.3,
+    "etaMinutes": 38,
+    "distanceKm": 3.9,
+    "categories": ["Seafood"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🦞",
+    "primaryColor": "#03A9F4",
+    "sections": [
+      {
+        "name": "Seafood Dishes",
+        "items": [
+          {
+            "id": "seafood-001",
+            "name": "Grilled Salmon",
+            "description": "Fresh salmon with lemon butter sauce",
+            "price": 28.00,
+            "imageUrl": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-011",
+    "name": "Middle East Grill",
+    "coverImageUrl": "https://images.unsplash.com/photo-1600788902219-04dc3d6b7a3f?w=400&h=300&fit=crop",
+    "rating": 4.6,
+    "etaMinutes": 26,
+    "distanceKm": 2.3,
+    "categories": ["Middle Eastern", "Grill"],
+    "city": "São Paulo",
+    "isOpenNow": true,
+    "icon": "🥙",
+    "primaryColor": "#FF9800",
+    "sections": [
+      {
+        "name": "Grilled Specials",
+        "items": [
+          {
+            "id": "me-001",
+            "name": "Chicken Shawarma",
+            "description": "Grilled chicken with tahini sauce",
+            "price": 13.00,
+            "imageUrl": "https://images.unsplash.com/photo-1600788902219-04dc3d6b7a3f?w=300&h=200&fit=crop"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,141 @@
+<div class="tenants-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="page-icon">business</mat-icon>
+        <h1>{{ 'tenants.title' | translate }}</h1>
+      </div>
+      <button mat-raised-button color="primary" (click)="openCreateDialog()">
+        <mat-icon>add</mat-icon>
+        {{ 'tenants.create' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <mat-card class="toolbar-card">
+    <div class="toolbar-content">
+      <div class="search-filters">
+        <!-- Search -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>{{ 'tenants.search' | translate }}</mat-label>
+          <input matInput [formControl]="searchControl" [placeholder]="'tenants.search' | translate">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+
+
+        <!-- State Filter -->
+        <mat-form-field appearance="outline" class="state-filter">
+          <mat-label>{{ 'tenants.state' | translate }}</mat-label>
+          <mat-select [formControl]="stateControl">
+            <mat-option value="">{{ 'tenants.allStates' | translate }}</mat-option>
+            <mat-option value="Active">{{ 'tenants.active' | translate }}</mat-option>
+            <mat-option value="Suspended">{{ 'tenants.suspended' | translate }}</mat-option>
+            <mat-option value="Inactive">{{ 'tenants.inactive' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+
+    </div>
+  </mat-card>
+
+  <!-- Loading Bar -->
+  <mat-progress-bar mode="query" *ngIf="loading"></mat-progress-bar>
+
+  <!-- Content -->
+  <div class="content-area">
+    <div class="table-container" *ngIf="!loading && !error">
+      <mat-card>
+        <table mat-table [dataSource]="dataSource" matSort class="tenants-table">
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let tenant">{{ tenant.name }}</td>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="billingEmail">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Billing Email</th>
+        <td mat-cell *matCellDef="let tenant">{{ tenant.billingEmail }}</td>
+      </ng-container>
+
+      <!-- State Column -->
+      <ng-container matColumnDef="state">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>State</th>
+        <td mat-cell *matCellDef="let tenant">
+          <mat-chip [color]="getStateChipColor(tenant.state)" selected>
+            {{ tenant.state }}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Created Column -->
+      <ng-container matColumnDef="created">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Created</th>
+        <td mat-cell *matCellDef="let tenant">{{ formatDate(tenant.created) }}</td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let tenant">
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="openEditDialog(tenant)">
+              <mat-icon>edit</mat-icon>
+              <span>Edit</span>
+            </button>
+            <button mat-menu-item 
+                    *ngIf="tenant.state === 'Active'" 
+                    (click)="suspendTenant(tenant)">
+              <mat-icon>pause</mat-icon>
+              <span>Suspend</span>
+            </button>
+            <button mat-menu-item 
+                    *ngIf="tenant.state === 'Suspended'" 
+                    (click)="reactivateTenant(tenant)">
+              <mat-icon>play_arrow</mat-icon>
+              <span>Reactivate</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+    <p>Loading tenants...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error && !loading">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadTenants()">
+      Retry
+    </button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-container" *ngIf="!loading && !error && dataSource.data.length === 0">
+    <mat-icon>business</mat-icon>
+    <p>No tenants found</p>
+    <button mat-raised-button color="primary" (click)="openCreateDialog()">
+      Create First Tenant
+    </button>
+  </div>
+</div>

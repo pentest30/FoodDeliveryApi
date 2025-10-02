@@ -1,0 +1,187 @@
+<div class="restaurants-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="page-icon">restaurant</mat-icon>
+        <h1>{{ 'restaurants.title' | translate }}</h1>
+      </div>
+      <button mat-raised-button color="primary" (click)="createRestaurant()">
+        <mat-icon>add</mat-icon>
+        {{ 'restaurants.create' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <mat-card class="toolbar-card">
+    <div class="toolbar-content">
+      <div class="search-filters">
+        <!-- Search -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>{{ 'restaurants.search' | translate }}</mat-label>
+          <input matInput [formControl]="searchControl" [placeholder]="'restaurants.search' | translate">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- City Filter -->
+        <mat-form-field appearance="outline" class="city-filter" *ngIf="cities().length > 0">
+          <mat-label>{{ 'restaurants.city' | translate }}</mat-label>
+          <mat-select [formControl]="cityControl">
+            <mat-option value="">All Cities</mat-option>
+            <mat-option *ngFor="let city of cities()" [value]="city">{{ city }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Open Status Filter -->
+        <mat-form-field appearance="outline" class="status-filter">
+          <mat-label>{{ 'restaurants.status' | translate }}</mat-label>
+          <mat-select [formControl]="isOpenControl">
+            <mat-option value="">All Status</mat-option>
+            <mat-option value="true">{{ 'restaurants.open' | translate }}</mat-option>
+            <mat-option value="false">{{ 'restaurants.closed' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Rating Filter -->
+        <mat-form-field appearance="outline" class="rating-filter">
+          <mat-label>{{ 'restaurants.rating' | translate }}</mat-label>
+          <mat-select [formControl]="ratingControl">
+            <mat-option value="">All Ratings</mat-option>
+            <mat-option value="4">{{ 'restaurants.rating4+' | translate }}</mat-option>
+            <mat-option value="3">{{ 'restaurants.rating3+' | translate }}</mat-option>
+            <mat-option value="2">{{ 'restaurants.rating2+' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+
+    </div>
+  </mat-card>
+
+  <!-- Loading Bar -->
+  <mat-progress-bar mode="query" *ngIf="loading()"></mat-progress-bar>
+
+  <!-- Content -->
+  <div class="content-area">
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading() && restaurants().length === 0">
+      <mat-icon class="empty-icon">restaurant</mat-icon>
+      <h2>{{ 'restaurants.empty' | translate }}</h2>
+      <p>Get started by creating your first restaurant</p>
+      <button mat-raised-button color="primary" (click)="createRestaurant()">
+        <mat-icon>add</mat-icon>
+        {{ 'restaurants.create' | translate }}
+      </button>
+    </div>
+
+    <!-- Restaurants Content -->
+    <div class="restaurants-content" *ngIf="!loading() && restaurants().length > 0">
+      <!-- Data Grid -->
+      <div class="table-container">
+        <mat-card>
+          <table mat-table [dataSource]="restaurants()" matSort class="restaurants-table">
+            <!-- Thumbnail Column -->
+            <ng-container matColumnDef="thumbnail">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let store">
+                <div class="table-thumbnail">
+                  <img [src]="store.coverImageUrl || 'https://via.placeholder.com/40x40/e0e0e0/757575?text=?'" 
+                       [alt]="store.name"
+                       (error)="onImageError($event)">
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+              <td mat-cell *matCellDef="let store">
+                <div class="name-cell">
+                  <span class="store-name">{{ store.name }}</span>
+                  <span class="store-address" *ngIf="store.addressLine1">{{ store.addressLine1 }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- City Column -->
+            <ng-container matColumnDef="city">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.city' | translate }}</th>
+              <td mat-cell *matCellDef="let store">{{ store.city || '-' }}</td>
+            </ng-container>
+
+            <!-- Rating Column -->
+            <ng-container matColumnDef="rating">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.rating' | translate }}</th>
+              <td mat-cell *matCellDef="let store">
+                <div class="rating-cell">
+                  <mat-icon class="star-icon">star</mat-icon>
+                  <span class="rating-value">{{ store.rating | number:'1.1-1' }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- ETA Column -->
+            <ng-container matColumnDef="eta">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.eta' | translate }}</th>
+              <td mat-cell *matCellDef="let store">
+                <div class="eta-cell">
+                  <mat-icon class="time-icon">schedule</mat-icon>
+                  <span>{{ store.etaMinutes }} min</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>{{ 'restaurants.status' | translate }}</th>
+              <td mat-cell *matCellDef="let store">
+                <mat-chip class="status-chip" [class]="store.isOpenNow ? 'open-chip' : 'closed-chip'">
+                  {{ store.isOpenNow ? ('restaurants.open' | translate) : ('restaurants.closed' | translate) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Created Column -->
+            <ng-container matColumnDef="created">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.created' | translate }}</th>
+              <td mat-cell *matCellDef="let store">{{ store.createdAt | date:'short' }}</td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>{{ 'restaurants.actions' | translate }}</th>
+              <td mat-cell *matCellDef="let store">
+                <button mat-icon-button [matMenuTriggerFor]="tableMenu">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #tableMenu="matMenu">
+                  <button mat-menu-item (click)="editRestaurant(store)">
+                    <mat-icon>edit</mat-icon>
+                    {{ 'restaurants.edit' | translate }}
+                  </button>
+                  <button mat-menu-item (click)="manageImages(store)">
+                    <mat-icon>photo_library</mat-icon>
+                    {{ 'restaurants.images' | translate }}
+                  </button>
+                  <button mat-menu-item (click)="manageHours(store)">
+                    <mat-icon>schedule</mat-icon>
+                    {{ 'restaurants.hours' | translate }}
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button mat-menu-item (click)="deleteRestaurant(store)" class="delete-action">
+                    <mat-icon>delete</mat-icon>
+                    {{ 'restaurants.delete' | translate }}
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</div>

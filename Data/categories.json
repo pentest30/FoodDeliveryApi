@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cat-001",
+    "name": "Pizza",
+    "icon": "🍕",
+    "color": "#FF6B35"
+  },
+  {
+    "id": "cat-002",
+    "name": "Burgers",
+    "icon": "🍔",
+    "color": "#FF8C00"
+  },
+  {
+    "id": "cat-003",
+    "name": "Sushi",
+    "icon": "🍣",
+    "color": "#4CAF50"
+  },
+  {
+    "id": "cat-004",
+    "name": "Mexican",
+    "icon": "🌮",
+    "color": "#FF5722"
+  },
+  {
+    "id": "cat-005",
+    "name": "Italian",
+    "icon": "🍝",
+    "color": "#9C27B0"
+  },
+  {
+    "id": "cat-006",
+    "name": "Chinese",
+    "icon": "🥡",
+    "color": "#F44336"
+  },
+  {
+    "id": "cat-007",
+    "name": "Indian",
+    "icon": "🍛",
+    "color": "#FF9800"
+  },
+  {
+    "id": "cat-008",
+    "name": "Desserts",
+    "icon": "🍰",
+    "color": "#E91E63"
+  }
+]

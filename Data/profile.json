@@ -1,0 +1,49 @@
+{
+  "id": "user-001",
+  "name": "João Silva",
+  "email": "joao.silva@email.com",
+  "phone": "+55 11 99999-9999",
+  "profileImageUrl": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+  "addresses": [
+    {
+      "id": "addr-001",
+      "label": "Casa",
+      "street": "Rua das Flores, 123",
+      "neighborhood": "Vila Madalena",
+      "city": "São Paulo",
+      "state": "SP",
+      "zipCode": "05435-000",
+      "isDefault": true
+    },
+    {
+      "id": "addr-002",
+      "label": "Trabalho",
+      "street": "Av. Paulista, 1000",
+      "neighborhood": "Bela Vista",
+      "city": "São Paulo",
+      "state": "SP",
+      "zipCode": "01310-100",
+      "isDefault": false
+    }
+  ],
+  "paymentMethods": [
+    {
+      "id": "pay-001",
+      "type": "CreditCard",
+      "label": "Visa **** 1234",
+      "isDefault": true
+    },
+    {
+      "id": "pay-002",
+      "type": "Cash",
+      "label": "Dinheiro na entrega",
+      "isDefault": false
+    }
+  ],
+  "preferences": {
+    "notifications": true,
+    "promotions": true,
+    "language": "pt-BR",
+    "theme": "light"
+  }
+}

@@ -1,0 +1,230 @@
+.store-form-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.store-form-card {
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+
+  mat-card-header {
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    margin-bottom: 24px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 500;
+      color: #1976d2;
+
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    mat-card-subtitle {
+      margin-top: 8px;
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+
+  mat-spinner {
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0 0 24px 0;
+    font-size: 16px;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.store-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .full-width {
+    width: 100%;
+  }
+
+  .coordinates-row {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+
+    .coordinate-field {
+      flex: 1;
+    }
+  }
+
+  // Opening Hours Section
+  .opening-hours-section {
+    margin: 32px 0;
+    padding: 24px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px 0;
+      color: #333;
+      font-weight: 500;
+      font-size: 18px;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  mat-form-field {
+    mat-icon[matSuffix] {
+      color: rgba(0, 0, 0, 0.54);
+    }
+
+    &.mat-form-field-invalid {
+      mat-icon[matSuffix] {
+        color: #f44336;
+      }
+    }
+  }
+
+  mat-hint {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  mat-error {
+    font-size: 12px;
+    color: #f44336;
+    margin-top: 4px;
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+  .save-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+    height: 44px;
+
+    .button-spinner {
+      margin-right: 8px;
+    }
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .store-form-container {
+    padding: 16px;
+  }
+
+  .coordinates-row {
+    flex-direction: column;
+    gap: 20px;
+
+    .coordinate-field {
+      width: 100%;
+    }
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// Global snackbar styles
+:host ::ng-deep {
+  .success-snackbar {
+    background-color: #4caf50;
+    color: white;
+
+    .mat-mdc-snack-bar-action {
+      color: white;
+    }
+  }
+
+  .error-snackbar {
+    background-color: #f44336;
+    color: white;
+
+    .mat-mdc-snack-bar-action {
+      color: white;
+    }
+  }
+}

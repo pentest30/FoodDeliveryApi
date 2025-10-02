@@ -1,0 +1,104 @@
+<div class="opening-hours-container">
+  <mat-card class="opening-hours-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>schedule</mat-icon>
+        Opening Hours
+      </mat-card-title>
+      <mat-card-subtitle>
+        Set your weekly opening hours
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading opening hours...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error && !loading" class="error-container">
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-button color="primary" (click)="loadOpeningHours()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form *ngIf="!loading && !error" [formGroup]="openingHoursForm" (ngSubmit)="onSubmit()" class="opening-hours-form">
+        <div formArrayName="hours" class="hours-grid">
+          <div class="hours-header">
+            <div class="day-column">Day</div>
+            <div class="time-column">Open Time</div>
+            <div class="time-column">Close Time</div>
+            <div class="closed-column">Closed</div>
+          </div>
+
+          <div *ngFor="let dayGroup of hoursFormArray.controls; let i = index" 
+               [formGroupName]="i" 
+               class="day-row"
+               [class.error-row]="getDayError(i)">
+            
+            <!-- Day Name -->
+            <div class="day-name">
+              <mat-icon class="day-icon">today</mat-icon>
+              {{ daysOfWeek[i] }}
+            </div>
+
+            <!-- Open Time -->
+            <mat-form-field appearance="outline" class="time-field">
+              <mat-label>Open</mat-label>
+              <mat-select formControlName="openAt" [disabled]="getDayFormGroup(i).get('isClosed')?.value">
+                <mat-option *ngFor="let time of timeOptions" [value]="time">
+                  {{ time }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matSuffix>access_time</mat-icon>
+            </mat-form-field>
+
+            <!-- Close Time -->
+            <mat-form-field appearance="outline" class="time-field">
+              <mat-label>Close</mat-label>
+              <mat-select formControlName="closeAt" [disabled]="getDayFormGroup(i).get('isClosed')?.value">
+                <mat-option *ngFor="let time of timeOptions" [value]="time">
+                  {{ time }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matSuffix>access_time</mat-icon>
+            </mat-form-field>
+
+            <!-- Closed Toggle -->
+            <div class="closed-toggle">
+              <mat-slide-toggle formControlName="isClosed" color="primary">
+                Closed
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="getDayError(i)" class="day-error">
+              <mat-icon color="warn">error</mat-icon>
+              {{ getDayError(i) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button mat-button type="button" (click)="onReset()" [disabled]="saving">
+            <mat-icon>refresh</mat-icon>
+            Reset
+          </button>
+          
+          <button mat-raised-button color="primary" type="submit" [disabled]="saving || openingHoursForm.invalid">
+            <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
+            <mat-icon *ngIf="!saving">save</mat-icon>
+            {{ saving ? 'Saving...' : 'Save Opening Hours' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
