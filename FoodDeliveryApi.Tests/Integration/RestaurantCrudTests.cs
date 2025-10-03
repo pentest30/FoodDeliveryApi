@@ -127,7 +127,7 @@ public class RestaurantCrudTests : IntegrationTestBase
             Icon = "🍣",
             PrimaryColor = "#45B7D1",
             Images = new List<string> { "https://example.com/sushi1.jpg" },
-            Categories = new List<string> { "Sushi" }
+            CategoryIds = new List<string> { "sushi-category-id" }
         };
 
         var json = JsonSerializer.Serialize(newRestaurant);

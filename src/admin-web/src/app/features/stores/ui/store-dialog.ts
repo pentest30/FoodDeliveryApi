@@ -8,10 +8,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatSelectModule } from '@angular/material/select';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 
 import { RestaurantsService, RestaurantDto } from '../data/stores.service';
+import { CategoryService } from '../services/category.service';
+import { CategoryDto } from '../models/category.model';
 
 export interface StoreDialogData {
   store?: RestaurantDto;
@@ -31,6 +36,9 @@ export interface StoreDialogData {
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatChipsModule,
+    MatAutocompleteModule,
+    MatSelectModule,
     TranslateModule
   ],
   template: `
@@ -156,6 +164,47 @@ export interface StoreDialogData {
               ETA cannot exceed 300 minutes
             </mat-error>
           </mat-form-field>
+
+          <!-- Categories Section -->
+          <div class="section-header">
+            <mat-icon>category</mat-icon>
+            <span>Categories</span>
+          </div>
+
+          <!-- Category Selection -->
+          <div class="category-selection">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Select Categories</mat-label>
+              <mat-select formControlName="categoryIds" multiple>
+                <mat-option *ngFor="let category of availableCategories" [value]="category.id">
+                  <div class="category-option">
+                    <mat-icon [style.color]="category.color">{{ category.icon }}</mat-icon>
+                    <span>{{ category.name }}</span>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-hint>Choose categories that best describe this restaurant</mat-hint>
+            </mat-form-field>
+
+            <!-- Selected Categories Display -->
+            <div class="selected-categories" *ngIf="selectedCategories.length > 0">
+              <div class="category-tags">
+                <mat-chip *ngFor="let category of selectedCategories" 
+                          [style.background-color]="category.color + '20'"
+                          [style.color]="category.color"
+                          [style.border-color]="category.color"
+                          class="category-chip">
+                  <mat-icon>{{ category.icon }}</mat-icon>
+                  <span>{{ category.name }}</span>
+                  <button mat-icon-button 
+                          (click)="removeCategory(category.id)"
+                          class="remove-button">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </mat-chip>
+              </div>
+            </div>
+          </div>
         </form>
       </mat-dialog-content>
 
@@ -312,17 +361,87 @@ export interface StoreDialogData {
       font-size: 0.875rem;
       margin-top: 8px;
     }
+
+    /* Category Selection Styles */
+    .category-selection {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .category-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-option mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .selected-categories {
+      margin-top: 8px;
+    }
+
+    .category-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .category-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 16px;
+      border: 1px solid;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .category-chip mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    .remove-button {
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      margin-left: 4px;
+    }
+
+    .remove-button mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Responsive adjustments for categories */
+    @media (max-width: 600px) {
+      .category-tags {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   `]
 })
 export class StoreDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private restaurantsService = inject(RestaurantsService);
+  private categoryService = inject(CategoryService);
   private snackBar = inject(MatSnackBar);
   private dialogRef = inject(MatDialogRef<StoreDialogComponent>);
 
   storeForm!: FormGroup;
   loading = false;
   isEditMode = false;
+  availableCategories: CategoryDto[] = [];
+  selectedCategories: CategoryDto[] = [];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: StoreDialogData) {
     this.isEditMode = data.mode === 'edit';
@@ -330,6 +449,7 @@ export class StoreDialogComponent implements OnInit {
 
   ngOnInit() {
     this.initializeForm();
+    this.loadCategories();
     
     if (this.isEditMode && this.data.store) {
       this.populateForm(this.data.store);
@@ -344,7 +464,13 @@ export class StoreDialogComponent implements OnInit {
       lat: [null, [Validators.min(-90), Validators.max(90)]],
       lng: [null, [Validators.min(-180), Validators.max(180)]],
       serviceRadiusKm: [null, [Validators.min(0), Validators.max(100)]],
-      etaMinutes: [30, [Validators.required, Validators.min(1), Validators.max(300)]]
+      etaMinutes: [30, [Validators.required, Validators.min(1), Validators.max(300)]],
+      categoryIds: [[]]
+    });
+
+    // Subscribe to categoryIds changes to update selectedCategories
+    this.storeForm.get('categoryIds')?.valueChanges.subscribe(selectedIds => {
+      this.updateSelectedCategories(selectedIds);
     });
   }
 
@@ -356,7 +482,8 @@ export class StoreDialogComponent implements OnInit {
       lat: store.lat,
       lng: store.lng,
       serviceRadiusKm: store.serviceRadiusKm,
-      etaMinutes: store.etaMinutes || 30
+      etaMinutes: store.etaMinutes || 30,
+      categoryIds: store.categoryIds || []
     });
   }
 
@@ -377,7 +504,8 @@ export class StoreDialogComponent implements OnInit {
       lat: formValue.lat || undefined,
       lng: formValue.lng || undefined,
       serviceRadiusKm: formValue.serviceRadiusKm || undefined,
-      etaMinutes: formValue.etaMinutes
+      etaMinutes: formValue.etaMinutes,
+      categoryIds: formValue.categoryIds || []
     };
 
     const operation = this.isEditMode && this.data.store
@@ -405,5 +533,29 @@ export class StoreDialogComponent implements OnInit {
       const control = this.storeForm.get(key);
       control?.markAsTouched();
     });
+  }
+
+  private loadCategories() {
+    this.categoryService.getCategories().subscribe({
+      next: (categories) => {
+        this.availableCategories = categories;
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+        this.snackBar.open('Error loading categories', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  private updateSelectedCategories(selectedIds: string[]) {
+    this.selectedCategories = this.availableCategories.filter(category => 
+      selectedIds.includes(category.id)
+    );
+  }
+
+  removeCategory(categoryId: string) {
+    const currentIds = this.storeForm.get('categoryIds')?.value || [];
+    const updatedIds = currentIds.filter((id: string) => id !== categoryId);
+    this.storeForm.get('categoryIds')?.setValue(updatedIds);
   }
 }

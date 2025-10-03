@@ -1,0 +1,88 @@
+<div class="login-container">
+  <div class="login-background">
+    <div class="floating-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+  </div>
+  
+  <div class="login-content">
+    <div class="login-header">
+      <div class="logo">
+        <mat-icon class="logo-icon">restaurant</mat-icon>
+        <span class="logo-text">FoodAdmin</span>
+      </div>
+      <h1 class="welcome-title">Welcome Back</h1>
+      <p class="welcome-subtitle">Sign in to your account to continue</p>
+    </div>
+    
+    <mat-card class="login-card">
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Email Address</mat-label>
+            <input matInput type="email" formControlName="email" placeholder="Enter your email">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+              Email is required
+            </mat-error>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+              Please enter a valid email
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Password</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Enter your password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword" type="button">
+              <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+              Password is required
+            </mat-error>
+          </mat-form-field>
+
+          <div class="form-options">
+            <mat-checkbox class="remember-me">Remember me</mat-checkbox>
+            <a href="#" class="forgot-password">Forgot password?</a>
+          </div>
+
+          <div class="error-message global-error" *ngIf="errorMessage">
+            <mat-icon>error</mat-icon>
+            {{ errorMessage }}
+          </div>
+
+          <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading" class="login-button">
+            <span *ngIf="!isLoading" class="button-content">
+              <mat-icon>login</mat-icon>
+              Sign In
+            </span>
+            <span *ngIf="isLoading" class="button-content">
+              <mat-spinner diameter="20"></mat-spinner>
+              Signing in...
+            </span>
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    
+    <div class="login-footer">
+      <div class="demo-credentials">
+        <h3>Demo Credentials</h3>
+        <div class="credential-item">
+          <strong>Admin:</strong> admin@fooddelivery.com / Admin@123
+        </div>
+        <div class="credential-item">
+          <strong>Customer:</strong> customer@fooddelivery.com / Customer@123
+        </div>
+      </div>
+      
+      <p class="footer-text">
+        Don't have an account? 
+        <a href="#" class="signup-link">Sign up here</a>
+      </p>
+    </div>
+  </div>
+</div>

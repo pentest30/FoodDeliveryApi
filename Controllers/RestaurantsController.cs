@@ -37,13 +37,14 @@ public class RestaurantsController : ControllerBase
         var (items, total) = await _restaurantService.SearchAsync(city, isOpenNow, category, search, page, pageSize, ct);
         var models = items.Select(r => new RestaurantDto
         {
-            Id = r.ExternalId,
+            Id = r.Id.ToString(),
             Name = r.Name,
             Images = r.Images,
             Rating = (decimal)r.Rating,
             EtaMinutes = r.EtaMinutes,
             DistanceKm = (decimal)r.DistanceKm,
             Categories = r.RestaurantCategories.Select(rc => rc.Category.Name).ToList(),
+            CategoryIds = r.RestaurantCategories.Select(rc => rc.Category.ExternalId).ToList(),
             City = r.City,
             IsOpenNow = r.IsOpenNow,
             Icon = r.Icon,
@@ -72,13 +73,14 @@ public class RestaurantsController : ControllerBase
         
         var model = new RestaurantDto
         {
-            Id = r.ExternalId,
+            Id = r.Id.ToString(),
             Name = r.Name,
             Images = r.Images,
             Rating = (decimal)r.Rating,
             EtaMinutes = r.EtaMinutes,
             DistanceKm = (decimal)r.DistanceKm,
             Categories = r.RestaurantCategories.Select(rc => rc.Category.Name).ToList(),
+            CategoryIds = r.RestaurantCategories.Select(rc => rc.Category.ExternalId).ToList(),
             City = r.City,
             IsOpenNow = r.IsOpenNow,
             Icon = r.Icon,
@@ -116,22 +118,20 @@ public class RestaurantsController : ControllerBase
     {
         try
         {
-            var tenantId = HttpContext.GetMultiTenantContext<Tenant>()?.TenantInfo?.Id 
-                ?? throw new InvalidOperationException("Tenant context not found");
-            
             var entity = Restaurant.Create(
                 string.IsNullOrWhiteSpace(dto.ExternalId) ? Guid.NewGuid().ToString("N") : dto.ExternalId,
-                tenantId,
                 dto.Name,
                 dto.City,
                 dto.EtaMinutes,
                 dto.DistanceKm,
                 dto.Icon,
                 dto.PrimaryColor,
-                dto.Images
+                dto.Images,
+                categoryIds: dto.CategoryIds.Select(Guid.Parse).ToList()
             );
             
             entity = await _restaurantService.CreateAsync(entity, ct);
+            
             return CreatedAtAction(nameof(GetRestaurantById), new { id = entity.ExternalId }, new { id = entity.ExternalId });
         }
         catch (ArgumentException ex)
@@ -160,7 +160,27 @@ public class RestaurantsController : ControllerBase
                         r.AddImage(image);
                     }
                 }
+
+                // Handle categories - clear existing and add new ones
+                if (dto.CategoryIds != null)
+                {
+                    r.RestaurantCategories.Clear();
+                    // Note: We'll add categories after the update call since we need to fetch them first
+                }
             }, ct);
+
+            // Handle categories after the restaurant is updated
+            if (dto.CategoryIds != null)
+            {
+                var categories = await _restaurantService.GetCategoriesByExternalIdsAsync(dto.CategoryIds, ct);
+                updated = await _restaurantService.UpdateAsync(id, r =>
+                {
+                    foreach (var category in categories)
+                    {
+                        r.AddCategory(category.Id);
+                    }
+                }, ct);
+            }
             
             return Ok(new { id = updated.ExternalId });
         }
@@ -230,6 +250,61 @@ public class RestaurantsController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = $"Error deleting image: {ex.Message}" });
+        }
+    }
+
+    // Category Management Endpoints
+    [HttpPost("{id}/categories")]
+    public async Task<ActionResult> AddCategories(string id, [FromBody] List<string> categoryIds, CancellationToken ct)
+    {
+        try
+        {
+            var updated = await _restaurantService.AddCategoriesAsync(id, categoryIds, ct);
+            return Ok(new { id = updated.ExternalId, message = "Categories added successfully" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = $"Restaurant with ID '{id}' not found" });
+        }
+        catch (ArgumentException ex)
+        {
+            return Problem(title: "Validation Error", statusCode: 400, detail: ex.Message);
+        }
+    }
+
+    [HttpDelete("{id}/categories")]
+    public async Task<ActionResult> RemoveCategories(string id, [FromBody] List<string> categoryIds, CancellationToken ct)
+    {
+        try
+        {
+            var updated = await _restaurantService.RemoveCategoriesAsync(id, categoryIds, ct);
+            return Ok(new { id = updated.ExternalId, message = "Categories removed successfully" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = $"Restaurant with ID '{id}' not found" });
+        }
+        catch (ArgumentException ex)
+        {
+            return Problem(title: "Validation Error", statusCode: 400, detail: ex.Message);
+        }
+    }
+
+    [HttpPut("{id}/categories")]
+    public async Task<ActionResult> SetCategories(string id, [FromBody] List<string> categoryIds, CancellationToken ct)
+    {
+        try
+        {
+            var updated = await _restaurantService.SetCategoriesAsync(id, categoryIds, ct);
+            return Ok(new { id = updated.ExternalId, message = "Categories updated successfully" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = $"Restaurant with ID '{id}' not found" });
+        }
+        catch (ArgumentException ex)
+        {
+            return Problem(title: "Validation Error", statusCode: 400, detail: ex.Message);
         }
     }
 

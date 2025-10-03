@@ -24,7 +24,7 @@ public class CategoriesController : ControllerBase
         var categories = await _categoryService.GetAllAsync(ct);
         return Ok(categories.Select(c => new CategoryDto 
         { 
-            Id = c.ExternalId, 
+            Id = c.Id.ToString(), 
             Name = c.Name, 
             Icon = c.Icon, 
             Color = c.Color 
@@ -39,7 +39,7 @@ public class CategoriesController : ControllerBase
         
         return Ok(new CategoryDto 
         { 
-            Id = category.ExternalId, 
+            Id = category.Id.ToString(), 
             Name = category.Name, 
             Icon = category.Icon, 
             Color = category.Color 
@@ -66,7 +66,7 @@ public class CategoriesController : ControllerBase
             
             return Created($"/api/v1/categories/{entity.ExternalId}", new CategoryDto 
             { 
-                Id = entity.ExternalId, 
+                Id = entity.Id.ToString(), 
                 Name = entity.Name, 
                 Icon = entity.Icon, 
                 Color = entity.Color 
@@ -90,7 +90,7 @@ public class CategoriesController : ControllerBase
             var updated = await _categoryService.UpdateAsync(id, c => c.UpdateInfo(dto.Name, dto.Icon, dto.Color), ct);
             return Ok(new CategoryDto 
             { 
-                Id = updated.ExternalId, 
+                Id = updated.Id.ToString(), 
                 Name = updated.Name, 
                 Icon = updated.Icon, 
                 Color = updated.Color 

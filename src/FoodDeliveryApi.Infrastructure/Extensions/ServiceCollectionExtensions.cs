@@ -192,6 +192,7 @@ public static class ServiceCollectionExtensions
 
         // Application Services
         services.AddScoped<RestaurantService>();
+        services.AddScoped<RestaurantSectionService>();
         services.AddScoped<CategoryService>();
         services.AddScoped<OrderService>();
         services.AddScoped<UserService>();
@@ -239,6 +240,7 @@ public static class ServiceCollectionExtensions
                 .Build();
         });
         services.AddScoped<IImageService, MinioImageService>();
+        services.AddScoped<IRestaurantSectionImageService, RestaurantSectionImageService>();
 
         return services;
     }

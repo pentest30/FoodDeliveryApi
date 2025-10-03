@@ -316,7 +316,11 @@ namespace FoodDeliveryApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("Active")
+                    b.Property<string>("Allergens")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Available")
                         .HasColumnType("bit");
 
                     b.Property<decimal?>("BasePrice")
@@ -332,6 +336,7 @@ namespace FoodDeliveryApi.Migrations
                         .HasColumnType("nvarchar(3)");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
@@ -361,8 +366,8 @@ namespace FoodDeliveryApi.Migrations
 
                     b.HasIndex("RestaurantSectionId");
 
-                    b.HasIndex("RestaurantId", "Active")
-                        .HasDatabaseName("IX_RestaurantMenuItems_RestaurantId_Active");
+                    b.HasIndex("RestaurantId", "Available")
+                        .HasDatabaseName("IX_RestaurantMenuItems_RestaurantId_Available");
 
                     b.HasIndex("RestaurantId", "RestaurantSectionId")
                         .HasDatabaseName("IX_RestaurantMenuItems_RestaurantId_RestaurantSectionId");
@@ -381,6 +386,10 @@ namespace FoodDeliveryApi.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Images")
                         .IsRequired()

@@ -123,7 +123,7 @@ public static class DbSeeder
                     var category = await db.Categories.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Name == categoryName, cancellationToken);
                     if (category != null)
                     {
-                        restaurant.AddCategory(category);
+                        restaurant.AddCategory(category.Id);
                     }
                 }
             }

@@ -163,7 +163,7 @@ public class TestDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.BasePrice).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Currency).HasMaxLength(3);
-            entity.Property(e => e.Active);
+            entity.Property(e => e.Available);
             
             // Configure Images as JSON array
             entity.Property(e => e.Images)

@@ -1,6 +1,5 @@
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Common;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Orders;
-using FoodDeliveryApi.FoodDeliveryApi.Domain.Tenants;
 
 namespace FoodDeliveryApi.FoodDeliveryApi.Domain.Restaurants;
 
@@ -51,10 +50,6 @@ public class Restaurant : IHasDomainEvents
         // Validation
         if (string.IsNullOrWhiteSpace(externalId))
             throw new ArgumentException("ExternalId cannot be null or empty", nameof(externalId));
-        
-        if (string.IsNullOrWhiteSpace(tenantId))
-            throw new ArgumentException("TenantId cannot be null or empty", nameof(tenantId));
-        
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name cannot be null or empty", nameof(name));
         
@@ -83,6 +78,63 @@ public class Restaurant : IHasDomainEvents
             IsOpenNow = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
+
+        return restaurant;
+    }
+
+    // Factory method without tenantId (for Finbuckle auto-injection)
+    public static Restaurant Create(
+        string externalId,
+        string name,
+        string city,
+        int etaMinutes,
+        decimal distanceKm,
+        string icon = "",
+        string primaryColor = "",
+        List<string>? images = null,
+        List<RestaurantSection>? sections = null,
+        List<Guid>? categoryIds = null)
+    {
+        // Validation
+        if (string.IsNullOrWhiteSpace(externalId))
+            throw new ArgumentException("ExternalId cannot be null or empty", nameof(externalId));
+        
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name cannot be null or empty", nameof(name));
+        
+        if (string.IsNullOrWhiteSpace(city))
+            throw new ArgumentException("City cannot be null or empty", nameof(city));
+        
+        if (etaMinutes <= 0)
+            throw new ArgumentException("EtaMinutes must be greater than zero", nameof(etaMinutes));
+        
+        if (distanceKm < 0)
+            throw new ArgumentException("DistanceKm cannot be negative", nameof(distanceKm));
+
+        var restaurant = new Restaurant
+        {
+            Id = Guid.NewGuid(),
+            ExternalId = externalId,
+            Name = name,
+            City = city,
+            EtaMinutes = etaMinutes,
+            DistanceKm = distanceKm,
+            Icon = icon,
+            PrimaryColor = primaryColor,
+            Images = images ?? new List<string>(),
+            Rating = 0m,
+            IsOpenNow = true,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        // Add categories if provided
+        if (categoryIds != null && categoryIds.Any())
+        {
+            foreach (var categoryId in categoryIds)
+            {
+                restaurant.AddCategory(categoryId);
+            }
+        }
 
         return restaurant;
     }
@@ -157,18 +209,17 @@ public class Restaurant : IHasDomainEvents
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
-    public void AddCategory(Category category)
+    public void AddCategory(Guid categoryId)
     {
-        if (category == null)
-            throw new ArgumentNullException(nameof(category));
+        if (categoryId == Guid.Empty)
+            throw new ArgumentException("CategoryId cannot be empty", nameof(categoryId));
 
-        if (!RestaurantCategories.Any(rc => rc.CategoryId == category.Id))
+        if (!RestaurantCategories.Any(rc => rc.CategoryId == categoryId))
         {
             var restaurantCategory = new RestaurantCategory
             {
                 RestaurantId = Id,
-                CategoryId = category.Id,
-                Category = category
+                CategoryId = categoryId
             };
             RestaurantCategories.Add(restaurantCategory);
             UpdatedAt = DateTimeOffset.UtcNow;
@@ -191,7 +242,7 @@ public class Restaurant : IHasDomainEvents
 
         if (!RestaurantSections.Any(rs => rs.Name.Equals(section.Name, StringComparison.OrdinalIgnoreCase)))
         {
-            section.RestaurantId = Id;
+            section.SetRestaurantId(Id);
             RestaurantSections.Add(section);
             UpdatedAt = DateTimeOffset.UtcNow;
         }
@@ -218,7 +269,7 @@ public class Restaurant : IHasDomainEvents
         if (existingSection != null)
         {
             var index = RestaurantSections.IndexOf(existingSection);
-            updatedSection.RestaurantId = Id;
+            updatedSection.SetRestaurantId(Id);
             RestaurantSections[index] = updatedSection;
             UpdatedAt = DateTimeOffset.UtcNow;
         }

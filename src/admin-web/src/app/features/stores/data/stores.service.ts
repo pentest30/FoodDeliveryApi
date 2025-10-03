@@ -1,13 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, catchError, of } from 'rxjs';
+import { Observable, catchError, of, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { StoreService, UpsertStoreRequest } from '../../../api/services/StoreService';
-import { Store } from '../../../api/models/Store';
+import { environment } from '../../../../environments/environment';
 
 export interface RestaurantDto {
   id: string;
-  externalId: string;
-  tenantId: string;
+  externalId?: string;
+  tenantId?: string;
   name: string;
   images: string[];
   rating: number;
@@ -17,11 +16,12 @@ export interface RestaurantDto {
   isOpenNow: boolean;
   icon: string;
   primaryColor: string;
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
   tenantName?: string;
   // Restaurant management specific fields
   addressLine?: string;
+  addressLine1?: string;
   lat?: number;
   lng?: number;
   serviceRadiusKm?: number;
@@ -29,6 +29,8 @@ export interface RestaurantDto {
   coverImageUrl?: string;
   // Menu sections
   sections: RestaurantSectionDto[];
+  categories: any[];
+  categoryIds: string[];
 }
 
 export interface RestaurantSectionDto {
@@ -72,7 +74,14 @@ export interface MenuItemVariantDto {
 
 export interface RestaurantListResponse {
   items: RestaurantDto[];
+  data: RestaurantDto[];
   total: number;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export interface RestaurantListParams {
@@ -99,7 +108,8 @@ export interface StoreImageDto {
   providedIn: 'root'
 })
 export class RestaurantsService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
+  private readonly API_BASE = environment.apiUrl;
   
   /**
    * List restaurants with pagination, search, and filtering
@@ -115,11 +125,47 @@ export class RestaurantsService {
     if (params.pageSize) queryParams.set('pageSize', params.pageSize.toString());
     if (params.sort) queryParams.set('sort', params.sort);
 
-    return this.http.get<RestaurantListResponse>(`/api/restaurants?${queryParams.toString()}`).pipe(
+    return this.http.get<any>(`${this.API_BASE}/restaurants?${queryParams.toString()}`).pipe(
+      map(response => {
+        // Map server response to expected format
+        return {
+          items: response.data || response.items || [],
+          data: response.data || [],
+          total: response.totalCount || response.total || 0,
+          totalCount: response.totalCount || 0,
+          page: response.page || 1,
+          pageSize: response.pageSize || 10,
+          totalPages: response.totalPages || 1,
+          hasPreviousPage: response.hasPreviousPage || false,
+          hasNextPage: response.hasNextPage || false
+        } as RestaurantListResponse;
+      }),
       catchError(error => {
         console.error('Error fetching restaurants:', error);
         // Fallback to empty result on error
-        return of({ items: [], total: 0 });
+        return of({ 
+          items: [], 
+          data: [],
+          total: 0, 
+          totalCount: 0,
+          page: 1,
+          pageSize: 10,
+          totalPages: 1,
+          hasPreviousPage: false,
+          hasNextPage: false
+        });
+      })
+    );
+  }
+
+  /**
+   * Get a single restaurant by ID
+   */
+  getRestaurant(id: string): Observable<RestaurantDto> {
+    return this.http.get<RestaurantDto>(`${this.API_BASE}/restaurants/${id}`).pipe(
+      catchError(error => {
+        console.error('Error fetching restaurant:', error);
+        throw error;
       })
     );
   }
@@ -128,7 +174,7 @@ export class RestaurantsService {
    * Create a new restaurant
    */
   createRestaurant(dto: Partial<RestaurantDto>): Observable<RestaurantDto> {
-    return this.http.post<RestaurantDto>('/api/restaurants', dto).pipe(
+    return this.http.post<RestaurantDto>(`${this.API_BASE}/restaurants`, dto).pipe(
       catchError(error => {
         console.error('Error creating restaurant:', error);
         throw error;
@@ -140,7 +186,7 @@ export class RestaurantsService {
    * Update an existing restaurant
    */
   updateRestaurant(id: string, dto: Partial<RestaurantDto>): Observable<RestaurantDto> {
-    return this.http.put<RestaurantDto>(`/api/restaurants/${id}`, dto).pipe(
+    return this.http.put<RestaurantDto>(`${this.API_BASE}/restaurants/${id}`, dto).pipe(
       catchError(error => {
         console.error('Error updating restaurant:', error);
         throw error;
@@ -152,7 +198,7 @@ export class RestaurantsService {
    * Delete a restaurant
    */
   deleteRestaurant(id: string): Observable<void> {
-    return this.http.delete<void>(`/api/restaurants/${id}`).pipe(
+    return this.http.delete<void>(`${this.API_BASE}/restaurants/${id}`).pipe(
       catchError(error => {
         console.error('Error deleting restaurant:', error);
         throw error;
@@ -164,7 +210,7 @@ export class RestaurantsService {
    * Get restaurant images
    */
   getRestaurantImages(restaurantId: string): Observable<StoreImageDto[]> {
-    return this.http.get<StoreImageDto[]>(`/api/restaurants/${restaurantId}/images`).pipe(
+    return this.http.get<StoreImageDto[]>(`${this.API_BASE}/restaurants/${restaurantId}/images`).pipe(
       catchError(error => {
         console.error('Error fetching restaurant images:', error);
         return of([]);
@@ -179,7 +225,7 @@ export class RestaurantsService {
     const formData = new FormData();
     formData.append('file', file);
     
-    return this.http.post<StoreImageDto>(`/api/restaurants/${restaurantId}/images`, formData).pipe(
+    return this.http.post<StoreImageDto>(`${this.API_BASE}/restaurants/${restaurantId}/images`, formData).pipe(
       catchError(error => {
         console.error('Error uploading restaurant image:', error);
         throw error;
@@ -191,7 +237,7 @@ export class RestaurantsService {
    * Set cover image
    */
   setCoverImage(restaurantId: string, imageId: string): Observable<void> {
-    return this.http.put<void>(`/api/restaurants/${restaurantId}/images/${imageId}/cover`, {}).pipe(
+    return this.http.put<void>(`${this.API_BASE}/restaurants/${restaurantId}/images/${imageId}/cover`, {}).pipe(
       catchError(error => {
         console.error('Error setting cover image:', error);
         throw error;
@@ -203,7 +249,7 @@ export class RestaurantsService {
    * Delete restaurant image
    */
   deleteRestaurantImage(restaurantId: string, imageId: string): Observable<void> {
-    return this.http.delete<void>(`/api/restaurants/${restaurantId}/images/${imageId}`).pipe(
+    return this.http.delete<void>(`${this.API_BASE}/restaurants/${restaurantId}/images/${imageId}`).pipe(
       catchError(error => {
         console.error('Error deleting restaurant image:', error);
         throw error;
@@ -215,7 +261,7 @@ export class RestaurantsService {
    * Get unique cities for filter dropdown
    */
   getCities(): Observable<string[]> {
-    return this.http.get<string[]>('/api/restaurants/cities').pipe(
+    return this.http.get<string[]>(`${this.API_BASE}/restaurants/cities`).pipe(
       catchError(error => {
         console.error('Error fetching cities:', error);
         return of([]);
@@ -227,7 +273,7 @@ export class RestaurantsService {
    * Get unique tenants for filter dropdown
    */
   getTenants(): Observable<string[]> {
-    return this.http.get<string[]>('/api/tenants').pipe(
+    return this.http.get<string[]>(`${this.API_BASE}/tenants`).pipe(
       catchError(error => {
         console.error('Error fetching tenants:', error);
         return of([]);
@@ -239,7 +285,7 @@ export class RestaurantsService {
    * Get restaurant sections (menu categories)
    */
   getRestaurantSections(restaurantId: string): Observable<RestaurantSectionDto[]> {
-    return this.http.get<RestaurantSectionDto[]>(`/api/restaurants/${restaurantId}/sections`).pipe(
+    return this.http.get<RestaurantSectionDto[]>(`${this.API_BASE}/restaurants/${restaurantId}/sections`).pipe(
       catchError(error => {
         console.error('Error fetching restaurant sections:', error);
         return of([]);
@@ -251,7 +297,7 @@ export class RestaurantsService {
    * Create restaurant section
    */
   createRestaurantSection(restaurantId: string, section: Partial<RestaurantSectionDto>): Observable<RestaurantSectionDto> {
-    return this.http.post<RestaurantSectionDto>(`/api/restaurants/${restaurantId}/sections`, section).pipe(
+    return this.http.post<RestaurantSectionDto>(`${this.API_BASE}/restaurants/${restaurantId}/sections`, section).pipe(
       catchError(error => {
         console.error('Error creating restaurant section:', error);
         throw error;
@@ -263,7 +309,7 @@ export class RestaurantsService {
    * Update restaurant section
    */
   updateRestaurantSection(restaurantId: string, sectionId: string, section: Partial<RestaurantSectionDto>): Observable<RestaurantSectionDto> {
-    return this.http.put<RestaurantSectionDto>(`/api/restaurants/${restaurantId}/sections/${sectionId}`, section).pipe(
+    return this.http.put<RestaurantSectionDto>(`${this.API_BASE}/restaurants/${restaurantId}/sections/${sectionId}`, section).pipe(
       catchError(error => {
         console.error('Error updating restaurant section:', error);
         throw error;
@@ -275,7 +321,7 @@ export class RestaurantsService {
    * Delete restaurant section
    */
   deleteRestaurantSection(restaurantId: string, sectionId: string): Observable<void> {
-    return this.http.delete<void>(`/api/restaurants/${restaurantId}/sections/${sectionId}`).pipe(
+    return this.http.delete<void>(`${this.API_BASE}/restaurants/${restaurantId}/sections/${sectionId}`).pipe(
       catchError(error => {
         console.error('Error deleting restaurant section:', error);
         throw error;

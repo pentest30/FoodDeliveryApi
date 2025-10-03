@@ -25,7 +25,7 @@ public class Order : IHasDomainEvents
     public Address DeliveryAddress { get; private set; } = null!;
     public CustomerRef Customer { get; private set; } = null!;
     public List<OrderItem> Items { get; private set; } = new();
-     public Restaurant? Restaurant { get; private set; }
+    public Restaurant? Restaurant { get; private set; }
     public UserProfile? UserProfile { get; private set; }
 
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();

@@ -6,7 +6,7 @@ import { TranslateHttpLoader, provideTranslateHttpLoader } from '@ngx-translate/
 import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { routes } from './app.routes';
-import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 
 export function httpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader();
@@ -21,7 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     {
       provide: HTTP_INTERCEPTORS,
-      useValue: authInterceptor,
+      useClass: AuthInterceptor,
       multi: true
     },
     importProvidersFrom(TranslateModule.forRoot({

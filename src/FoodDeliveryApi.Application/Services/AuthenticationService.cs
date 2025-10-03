@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
@@ -33,15 +32,21 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IMultiTenantContext<Tenant> _multiTenantContext;
+    private readonly TenantService _tenantService;
     private readonly IConfiguration _configuration;
 
     public AuthenticationService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
+        IMultiTenantContext<Tenant> multiTenantContext,
+        TenantService tenantService,
         IConfiguration configuration)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _multiTenantContext = multiTenantContext;
+        _tenantService = tenantService;
         _configuration = configuration;
     }
 
@@ -78,8 +83,9 @@ public class AuthenticationService : IAuthenticationService
             user.LastLoginAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
+            var tenant = await _tenantService.GetByIdAsync(user.TenantId);
             // Create claims
-            var claims = await CreateUserClaimsAsync(user);
+            var claims = await CreateUserClaimsAsync(user, tenant?.Identifier?.ToString() ?? string.Empty);
 
             // Generate JWT token
             var token = GenerateJwtToken(user, claims);
@@ -95,7 +101,7 @@ public class AuthenticationService : IAuthenticationService
                 Email = user.Email!,
                 FirstName = user.FirstName!,
                 LastName = user.LastName!,
-                TenantId = user.TenantId,
+                TenantId = tenant?.Identifier?? string.Empty,
                 CreatedAt = user.CreatedAt,
                 LastLoginAt = user.LastLoginAt
             };
@@ -115,12 +121,6 @@ public class AuthenticationService : IAuthenticationService
 
         try
         {
-            // Validate tenant context
-            if (registerDto.TenantId != tenantId)
-            {
-                result.Errors.Add("Provided TenantId does not match the current tenant context.");
-                return result;
-            }
 
             // Check if user already exists
             var existingUser = await _userManager.FindByEmailAsync(registerDto.Email);
@@ -186,14 +186,15 @@ public class AuthenticationService : IAuthenticationService
         }
     }
 
-    private async Task<List<Claim>> CreateUserClaimsAsync(ApplicationUser user)
+    private async Task<List<Claim>> CreateUserClaimsAsync(ApplicationUser user, string tenantId = "")
     {
+        
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Email, user.Email!),
             new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim()),
-            new("tenant_id", user.TenantId),
+            new("tenant_id", tenantId),
             new("user_id", user.Id)
         };
 

@@ -1,0 +1,233 @@
+<div class="user-list-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">User Management</h1>
+        <p class="page-subtitle">Manage users, roles, and permissions</p>
+      </div>
+      <button mat-raised-button color="primary" (click)="openCreateDialog()" class="add-user-btn">
+        <mat-icon>add</mat-icon>
+        Add User
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-container">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search users</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Search by email, name...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="status-filter">
+        <mat-label>Status</mat-label>
+        <mat-select [formControl]="statusFilter" (selectionChange)="onStatusFilterChange()">
+          <mat-option value="all">All Users</mat-option>
+          <mat-option value="active">Active Only</mat-option>
+          <mat-option value="inactive">Inactive Only</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-button (click)="clearFilters()" class="clear-filters">
+        <mat-icon>clear</mat-icon>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="loading-content">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading users...</p>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div *ngIf="!isLoading()" class="table-section">
+    <div class="table-container">
+      <table mat-table [dataSource]="users()" class="users-table">
+        
+        <!-- Select Column -->
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef class="select-header">
+            <mat-checkbox></mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let user" class="select-cell">
+            <mat-checkbox></mat-checkbox>
+          </td>
+        </ng-container>
+
+        <!-- Email Column -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef (click)="onSortChange('email')" class="sortable email-header">
+            <div class="header-content">
+              <span>Email</span>
+              <mat-icon class="sort-icon">arrow_upward</mat-icon>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let user" class="email-cell">
+            <div class="email-info">
+              <span class="email">{{ user.email }}</span>
+              <span *ngIf="!user.emailConfirmed" class="unconfirmed-badge">
+                <mat-icon>warning</mat-icon>
+                Unconfirmed
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef (click)="onSortChange('firstName')" class="sortable name-header">
+            <div class="header-content">
+              <span>Name</span>
+              <mat-icon class="sort-icon">arrow_upward</mat-icon>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let user" class="name-cell">
+            <div class="user-info">
+              <div class="user-avatar">{{ user.firstName?.charAt(0) }}{{ user.lastName?.charAt(0) }}</div>
+              <div class="user-details">
+                <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+                <span class="user-email">{{ user.email }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Roles Column -->
+        <ng-container matColumnDef="roles">
+          <th mat-header-cell *matHeaderCellDef class="roles-header">Roles</th>
+          <td mat-cell *matCellDef="let user" class="roles-cell">
+            <div class="roles-container">
+              <mat-chip-listbox>
+                <mat-chip *ngFor="let role of user.roles" [class]="'role-chip ' + role.toLowerCase()">
+                  <mat-icon class="chip-icon">{{ role === 'Admin' ? 'admin_panel_settings' : 'person' }}</mat-icon>
+                  {{ role }}
+                </mat-chip>
+              </mat-chip-listbox>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Active Status Column -->
+        <ng-container matColumnDef="isActive">
+          <th mat-header-cell *matHeaderCellDef (click)="onSortChange('isActive')" class="sortable status-header">
+            <div class="header-content">
+              <span>Status</span>
+              <mat-icon class="sort-icon">arrow_upward</mat-icon>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let user" class="status-cell">
+            <mat-chip [class]="user.isActive ? 'active-chip' : 'inactive-chip'">
+              <mat-icon class="chip-icon">{{ user.isActive ? 'check_circle' : 'block' }}</mat-icon>
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Email Confirmed Column -->
+        <ng-container matColumnDef="emailConfirmed">
+          <th mat-header-cell *matHeaderCellDef class="confirmed-header">Email Confirmed</th>
+          <td mat-cell *matCellDef="let user" class="confirmed-cell">
+            <div class="confirmation-status">
+              <mat-icon [class]="user.emailConfirmed ? 'confirmed' : 'unconfirmed'">
+                {{ user.emailConfirmed ? 'check_circle' : 'cancel' }}
+              </mat-icon>
+              <span class="status-text">{{ user.emailConfirmed ? 'Confirmed' : 'Pending' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Last Login Column -->
+        <ng-container matColumnDef="lastLoginAt">
+          <th mat-header-cell *matHeaderCellDef (click)="onSortChange('lastLoginAt')" class="sortable login-header">
+            <div class="header-content">
+              <span>Last Login</span>
+              <mat-icon class="sort-icon">arrow_upward</mat-icon>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let user" class="login-cell">
+            <div class="login-info">
+              <span class="date">{{ formatDate(user.lastLoginAt) }}</span>
+              <span class="time" *ngIf="user.lastLoginAt">{{ user.lastLoginAt | date:'h:mm a' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Created At Column -->
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef (click)="onSortChange('createdAt')" class="sortable created-header">
+            <div class="header-content">
+              <span>Created</span>
+              <mat-icon class="sort-icon">arrow_upward</mat-icon>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let user" class="created-cell">
+            <div class="date-info">
+              <span class="date">{{ formatDate(user.createdAt) }}</span>
+              <span class="time">{{ user.createdAt | date:'h:mm a' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
+          <td mat-cell *matCellDef="let user" class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="actionMenu" [matTooltip]="'Actions'" class="action-button">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #actionMenu="matMenu" class="action-menu">
+              <button mat-menu-item (click)="openEditDialog(user)" class="menu-item">
+                <mat-icon>edit</mat-icon>
+                <span>Edit User</span>
+              </button>
+              <button mat-menu-item (click)="toggleUserStatus(user)" class="menu-item">
+                <mat-icon>{{ user.isActive ? 'block' : 'check_circle' }}</mat-icon>
+                <span>{{ user.isActive ? 'Deactivate' : 'Activate' }}</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="openDeleteDialog(user)" class="menu-item delete-action">
+                <mat-icon>delete</mat-icon>
+                <span>Delete User</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="data-row"></tr>
+      </table>
+
+      <!-- No Data State -->
+      <div *ngIf="users().length === 0" class="empty-state">
+        <div class="empty-content">
+          <mat-icon class="empty-icon">people_outline</mat-icon>
+          <h3>No users found</h3>
+          <p>Try adjusting your search criteria or create a new user.</p>
+          <button mat-raised-button color="primary" (click)="openCreateDialog()">
+            <mat-icon>add</mat-icon>
+            Add First User
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <mat-paginator
+      *ngIf="!isLoading() && users().length > 0"
+      [length]="totalCount()"
+      [pageSize]="pageSize"
+      [pageIndex]="pageIndex"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)"
+      showFirstLastButtons
+      class="custom-paginator">
+    </mat-paginator>
+  </div>
+</div>

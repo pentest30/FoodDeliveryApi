@@ -12,6 +12,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
+import { AuthService, UserInfo } from './core/services/auth.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -38,11 +40,14 @@ export class App implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private translateService = inject(TranslateService);
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   protected readonly title = signal('admin-web');
   protected readonly isHandset = signal(false);
   protected readonly currentLang = signal('en');
   protected readonly notificationCount = signal(3);
+  protected readonly currentUser = signal<UserInfo | null>(null);
+  protected readonly isAuthenticated = signal(false);
 
   protected readonly moduleRoutes: any[] = [];
 
@@ -52,6 +57,7 @@ export class App implements OnInit {
       items: [
         { path: '/dashboard', icon: 'dashboard', label: 'nav.dashboard' },
         { path: '/customers', icon: 'people', label: 'nav.customers' },
+        { path: '/sections', icon: 'category', label: 'nav.sections' },
         { path: '/users', icon: 'group', label: 'nav.users' },
         { path: '/account', icon: 'account_circle', label: 'nav.account' }
       ]
@@ -75,6 +81,17 @@ export class App implements OnInit {
     // Set initial language
     this.translateService.setDefaultLang('en');
     this.translateService.use('en');
+
+    // Subscribe to authentication state
+    this.authService.authState$.subscribe(authState => {
+      this.isAuthenticated.set(authState.isAuthenticated);
+      this.currentUser.set(authState.user);
+      
+      // Redirect to login if not authenticated
+      if (!authState.isAuthenticated && !this.router.url.includes('/login')) {
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
   protected switchLanguage(lang: string) {
@@ -91,8 +108,11 @@ export class App implements OnInit {
   }
 
   protected logout() {
-    // Implement logout logic
-    console.log('Logout clicked');
+    this.authService.logout();
+  }
+
+  protected isLoginPage(): boolean {
+    return this.router.url.includes('/login');
   }
 
   protected shouldShowSecondaryNav(): boolean {

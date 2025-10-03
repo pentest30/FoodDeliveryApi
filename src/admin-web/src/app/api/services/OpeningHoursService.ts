@@ -20,7 +20,7 @@ export class OpeningHoursService {
     public static getOpeningHours(): CancelablePromise<OpeningHours | null> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/store/opening-hours',
+            url: '/store/opening-hours',
         });
     }
 
@@ -33,7 +33,7 @@ export class OpeningHoursService {
     public static setOpeningHours(requestBody: SetOpeningHoursRequest): CancelablePromise<OpeningHours> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/store/opening-hours',
+            url: '/store/opening-hours',
             body: requestBody,
         });
     }

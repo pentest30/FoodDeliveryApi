@@ -5,24 +5,21 @@ using FoodDeliveryApi.FoodDeliveryApi.Domain.Restaurants;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Tenants;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace FoodDeliveryApi.FoodDeliveryApi.Infrastructure.Persistence;
 
 public class FoodAppContext : MultiTenantDbContext
 {
-    
+
+    private readonly ITenantInfo? _tenantInfo;
 
     public FoodAppContext(
         DbContextOptions<FoodAppContext> options, 
         ITenantInfo tenantInfo) 
         : base(tenantInfo, options)
     {
-        var _tenantId = tenantInfo?.Id;
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
+        _tenantInfo = tenantInfo;
     }
     
     public DbSet<Category> Categories => Set<Category>();
@@ -31,7 +28,7 @@ public class FoodAppContext : MultiTenantDbContext
     public DbSet<RestaurantSection> RestaurantSections => Set<RestaurantSection>();
     public DbSet<RestaurantMenuItem> RestaurantMenuItems => Set<RestaurantMenuItem>();
     public DbSet<Order> Orders => Set<Order>();
-    public DbSet<global::FoodDeliveryApi.FoodDeliveryApi.Domain.Orders.OrderItem> OrderItems => Set<global::FoodDeliveryApi.FoodDeliveryApi.Domain.Orders.OrderItem>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<UserPaymentMethod> UserPaymentMethods => Set<UserPaymentMethod>();
     public DbSet<UserPreferences> UserPreferences => Set<UserPreferences>();
@@ -39,6 +36,26 @@ public class FoodAppContext : MultiTenantDbContext
     // Restaurant Menu Management entities
     public DbSet<MenuItemVariant> MenuItemVariants => Set<MenuItemVariant>();
     public DbSet<Discount> Discounts => Set<Discount>();
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+    {
+        if (_tenantInfo == null) return base.SaveChangesAsync(cancellationToken);
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                var tenantIdProp = entry.Properties
+                    .FirstOrDefault(p => p.Metadata.Name == "TenantId");
+                    
+                if (tenantIdProp != null && string.IsNullOrEmpty(tenantIdProp.CurrentValue as string))
+                {
+                    tenantIdProp.CurrentValue = _tenantInfo.Id;
+                }
+            }
+        }
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -77,7 +94,6 @@ public class FoodAppContext : MultiTenantDbContext
             entity.Property(e => e.DistanceKm).HasPrecision(10, 2);
             
             // Foreign key to Tenant
-          
             // Enable automatic multi-tenant filtering
             entity.IsMultiTenant();
         });
@@ -132,7 +148,7 @@ public class FoodAppContext : MultiTenantDbContext
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.BasePrice).HasPrecision(10, 2);
             entity.Property(e => e.Currency).HasMaxLength(3);
-            entity.Property(e => e.Active);
+            entity.Property(e => e.Available);
             entity.Property(e => e.CreatedAt);
             entity.Property(e => e.UpdatedAt);
             
@@ -373,8 +389,8 @@ public class FoodAppContext : MultiTenantDbContext
             .HasDatabaseName("IX_RestaurantMenuItems_RestaurantId_RestaurantSectionId");
             
         modelBuilder.Entity<RestaurantMenuItem>()
-            .HasIndex(rmi => new { rmi.RestaurantId, rmi.Active })
-            .HasDatabaseName("IX_RestaurantMenuItems_RestaurantId_Active");
+            .HasIndex(rmi => new { rmi.RestaurantId, rmi.Available })
+            .HasDatabaseName("IX_RestaurantMenuItems_RestaurantId_Available");
 
         modelBuilder.Entity<MenuItemVariant>()
             .HasIndex(mv => new { mv.MenuItemId, mv.SortOrder })

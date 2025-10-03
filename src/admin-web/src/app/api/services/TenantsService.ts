@@ -29,7 +29,7 @@ export class TenantsService {
     public static listTenants(): CancelablePromise<Array<Tenant>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/tenants',
+            url: '/tenants',
         });
     }
 
@@ -41,7 +41,7 @@ export class TenantsService {
     public static createTenant(requestBody: CreateTenantRequest): CancelablePromise<Tenant> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/tenants',
+            url: '/tenants',
             body: requestBody,
         });
     }
@@ -55,7 +55,7 @@ export class TenantsService {
     public static updateTenantProfile(id: string, requestBody: UpdateTenantProfileRequest): CancelablePromise<Tenant> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/tenants/{id}/profile',
+            url: '/tenants/{id}/profile',
             path: {
                 'id': id,
             },
@@ -71,7 +71,7 @@ export class TenantsService {
     public static suspendTenant(id: string): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/tenants/{id}/suspend',
+            url: '/tenants/{id}/suspend',
             path: {
                 'id': id,
             },
@@ -86,7 +86,7 @@ export class TenantsService {
     public static reactivateTenant(id: string): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/tenants/{id}/reactivate',
+            url: '/tenants/{id}/reactivate',
             path: {
                 'id': id,
             },

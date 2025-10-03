@@ -29,6 +29,7 @@ public class RestaurantDto
     public string Icon { get; set; } = string.Empty;
     public string PrimaryColor { get; set; } = string.Empty;
     public List<string> Categories { get; set; } = new();
+    public List<string> CategoryIds { get; set; } = new();
     public List<SectionDto> Sections { get; set; } = new();
 }
 

@@ -9,10 +9,14 @@ public interface IRestaurantRepository
 {
     Task<(IReadOnlyList<Restaurant> Items, int TotalCount)> SearchAsync(string? city, bool? openNow, string? category, string? q, int page, int pageSize, CancellationToken ct);
     Task<Restaurant?> GetByExternalIdAsync(string externalId, CancellationToken ct);
+    Task<Restaurant?> GetByIdAsync(Guid id, CancellationToken ct);
     Task<IReadOnlyList<RestaurantSection>> GetSectionsByRestaurantExternalIdAsync(string externalId, CancellationToken ct);
+    Task<RestaurantSection?> GetSectionByIdAsync(Guid sectionId, CancellationToken ct);
     Task<Restaurant> CreateAsync(Restaurant restaurant, CancellationToken ct);
     Task<Restaurant> UpdateAsync(string externalId, Action<Restaurant> update, CancellationToken ct);
+    Task UpdateAsync(Restaurant update, CancellationToken ct);
     Task<bool> DeleteAsync(string externalId, CancellationToken ct);
+    Task<IReadOnlyList<Category>> GetCategoriesByExternalIdsAsync(List<string> externalIds, CancellationToken ct);
 }
 
 public interface ICategoryRepository

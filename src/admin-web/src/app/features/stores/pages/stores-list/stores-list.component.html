@@ -1,21 +1,26 @@
 <div class="restaurants-container">
-  <!-- Header -->
+  <!-- Header Section -->
   <div class="page-header">
     <div class="header-content">
       <div class="title-section">
-        <mat-icon class="page-icon">restaurant</mat-icon>
-        <h1>{{ 'restaurants.title' | translate }}</h1>
+        <div class="title-icon">
+          <mat-icon class="page-icon">restaurant</mat-icon>
+        </div>
+        <div class="title-text">
+          <h1 class="page-title">{{ 'restaurants.title' | translate }}</h1>
+          <p class="page-subtitle">Manage restaurants, menus, and orders</p>
+        </div>
       </div>
-      <button mat-raised-button color="primary" (click)="createRestaurant()">
+      <button mat-raised-button color="primary" (click)="createRestaurant()" class="add-restaurant-btn">
         <mat-icon>add</mat-icon>
         {{ 'restaurants.create' | translate }}
       </button>
     </div>
   </div>
 
-  <!-- Toolbar -->
-  <mat-card class="toolbar-card">
-    <div class="toolbar-content">
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-container">
       <div class="search-filters">
         <!-- Search -->
         <mat-form-field appearance="outline" class="search-field">
@@ -54,133 +59,169 @@
           </mat-select>
         </mat-form-field>
       </div>
-
-
     </div>
-  </mat-card>
+  </div>
 
   <!-- Loading Bar -->
   <mat-progress-bar mode="query" *ngIf="loading()"></mat-progress-bar>
 
-  <!-- Content -->
-  <div class="content-area">
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="!loading() && restaurants().length === 0">
-      <mat-icon class="empty-icon">restaurant</mat-icon>
-      <h2>{{ 'restaurants.empty' | translate }}</h2>
-      <p>Get started by creating your first restaurant</p>
-      <button mat-raised-button color="primary" (click)="createRestaurant()">
-        <mat-icon>add</mat-icon>
-        {{ 'restaurants.create' | translate }}
-      </button>
+  <!-- Content Section -->
+  <div class="content-section">
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-container">
+      <div class="loading-content">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading restaurants...</p>
+      </div>
     </div>
 
-    <!-- Restaurants Content -->
-    <div class="restaurants-content" *ngIf="!loading() && restaurants().length > 0">
-      <!-- Data Grid -->
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading() && restaurants().length === 0">
+      <div class="empty-content">
+        <mat-icon class="empty-icon">restaurant</mat-icon>
+        <h3>{{ 'restaurants.empty' | translate }}</h3>
+        <p>Get started by creating your first restaurant</p>
+        <button mat-raised-button color="primary" (click)="createRestaurant()">
+          <mat-icon>add</mat-icon>
+          {{ 'restaurants.create' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Restaurants Table -->
+    <div class="table-section" *ngIf="!loading() && restaurants().length > 0">
       <div class="table-container">
-        <mat-card>
-          <table mat-table [dataSource]="restaurants()" matSort class="restaurants-table">
-            <!-- Thumbnail Column -->
-            <ng-container matColumnDef="thumbnail">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let store">
-                <div class="table-thumbnail">
-                  <img [src]="store.coverImageUrl || 'https://via.placeholder.com/40x40/e0e0e0/757575?text=?'" 
-                       [alt]="store.name"
-                       (error)="onImageError($event)">
+        <table mat-table [dataSource]="restaurants()" matSort class="restaurants-table">
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="name-header">
+              <div class="header-content">
+                <span>Restaurant</span>
+                <mat-icon class="sort-icon">sort</mat-icon>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let store" class="name-cell">
+              <div class="restaurant-info">
+                <div class="restaurant-details">
+                  <span class="restaurant-name">{{ store.name }}</span>
+                  <span class="restaurant-address" *ngIf="store.addressLine1">{{ store.addressLine1 }}</span>
                 </div>
-              </td>
-            </ng-container>
+              </div>
+            </td>
+          </ng-container>
 
-            <!-- Name Column -->
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-              <td mat-cell *matCellDef="let store">
-                <div class="name-cell">
-                  <span class="store-name">{{ store.name }}</span>
-                  <span class="store-address" *ngIf="store.addressLine1">{{ store.addressLine1 }}</span>
-                </div>
-              </td>
-            </ng-container>
+          <!-- City Column -->
+          <ng-container matColumnDef="city">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="city-header">
+              <div class="header-content">
+                <span>{{ 'restaurants.city' | translate }}</span>
+                <mat-icon class="sort-icon">sort</mat-icon>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let store" class="city-cell">
+              <div class="city-info">
+                <mat-icon class="location-icon">location_on</mat-icon>
+                <span>{{ store.city || '-' }}</span>
+              </div>
+            </td>
+          </ng-container>
 
-            <!-- City Column -->
-            <ng-container matColumnDef="city">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.city' | translate }}</th>
-              <td mat-cell *matCellDef="let store">{{ store.city || '-' }}</td>
-            </ng-container>
+          <!-- Rating Column -->
+          <ng-container matColumnDef="rating">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="rating-header">
+              <div class="header-content">
+                <span>{{ 'restaurants.rating' | translate }}</span>
+                <mat-icon class="sort-icon">sort</mat-icon>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let store" class="rating-cell">
+              <div class="rating-info">
+                <mat-icon class="star-icon">star</mat-icon>
+                <span class="rating-value">{{ store.rating | number:'1.1-1' }}</span>
+              </div>
+            </td>
+          </ng-container>
 
-            <!-- Rating Column -->
-            <ng-container matColumnDef="rating">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.rating' | translate }}</th>
-              <td mat-cell *matCellDef="let store">
-                <div class="rating-cell">
-                  <mat-icon class="star-icon">star</mat-icon>
-                  <span class="rating-value">{{ store.rating | number:'1.1-1' }}</span>
-                </div>
-              </td>
-            </ng-container>
+          <!-- ETA Column -->
+          <ng-container matColumnDef="eta">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="eta-header">
+              <div class="header-content">
+                <span>{{ 'restaurants.eta' | translate }}</span>
+                <mat-icon class="sort-icon">sort</mat-icon>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let store" class="eta-cell">
+              <div class="eta-info">
+                <mat-icon class="time-icon">schedule</mat-icon>
+                <span>{{ store.etaMinutes }} min</span>
+              </div>
+            </td>
+          </ng-container>
 
-            <!-- ETA Column -->
-            <ng-container matColumnDef="eta">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.eta' | translate }}</th>
-              <td mat-cell *matCellDef="let store">
-                <div class="eta-cell">
-                  <mat-icon class="time-icon">schedule</mat-icon>
-                  <span>{{ store.etaMinutes }} min</span>
-                </div>
-              </td>
-            </ng-container>
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef class="status-header">{{ 'restaurants.status' | translate }}</th>
+            <td mat-cell *matCellDef="let store" class="status-cell">
+              <mat-chip [class]="store.isOpenNow ? 'open-chip' : 'closed-chip'">
+                <mat-icon class="chip-icon">{{ store.isOpenNow ? 'check_circle' : 'block' }}</mat-icon>
+                {{ store.isOpenNow ? ('restaurants.open' | translate) : ('restaurants.closed' | translate) }}
+              </mat-chip>
+            </td>
+          </ng-container>
 
-            <!-- Status Column -->
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef>{{ 'restaurants.status' | translate }}</th>
-              <td mat-cell *matCellDef="let store">
-                <mat-chip class="status-chip" [class]="store.isOpenNow ? 'open-chip' : 'closed-chip'">
-                  {{ store.isOpenNow ? ('restaurants.open' | translate) : ('restaurants.closed' | translate) }}
-                </mat-chip>
-              </td>
-            </ng-container>
+          <!-- Created Column -->
+          <ng-container matColumnDef="created">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="created-header">
+              <div class="header-content">
+                <span>{{ 'restaurants.created' | translate }}</span>
+                <mat-icon class="sort-icon">sort</mat-icon>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let store" class="created-cell">
+              <div class="date-info">
+                <span class="date">{{ store.createdAt | date:'MMM dd, yyyy' }}</span>
+                <span class="time">{{ store.createdAt | date:'h:mm a' }}</span>
+              </div>
+            </td>
+          </ng-container>
 
-            <!-- Created Column -->
-            <ng-container matColumnDef="created">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'restaurants.created' | translate }}</th>
-              <td mat-cell *matCellDef="let store">{{ store.createdAt | date:'short' }}</td>
-            </ng-container>
-
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>{{ 'restaurants.actions' | translate }}</th>
-              <td mat-cell *matCellDef="let store">
-                <button mat-icon-button [matMenuTriggerFor]="tableMenu">
-                  <mat-icon>more_vert</mat-icon>
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'restaurants.actions' | translate }}</th>
+            <td mat-cell *matCellDef="let store" class="actions-cell">
+              <button mat-icon-button [matMenuTriggerFor]="tableMenu" [matTooltip]="'Actions'" class="action-button">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #tableMenu="matMenu" class="action-menu">
+                <button mat-menu-item (click)="viewRestaurant(store)" class="menu-item">
+                  <mat-icon>visibility</mat-icon>
+                  <span>View Details</span>
                 </button>
-                <mat-menu #tableMenu="matMenu">
-                  <button mat-menu-item (click)="editRestaurant(store)">
-                    <mat-icon>edit</mat-icon>
-                    {{ 'restaurants.edit' | translate }}
-                  </button>
-                  <button mat-menu-item (click)="manageImages(store)">
-                    <mat-icon>photo_library</mat-icon>
-                    {{ 'restaurants.images' | translate }}
-                  </button>
-                  <button mat-menu-item (click)="manageHours(store)">
-                    <mat-icon>schedule</mat-icon>
-                    {{ 'restaurants.hours' | translate }}
-                  </button>
-                  <mat-divider></mat-divider>
-                  <button mat-menu-item (click)="deleteRestaurant(store)" class="delete-action">
-                    <mat-icon>delete</mat-icon>
-                    {{ 'restaurants.delete' | translate }}
-                  </button>
-                </mat-menu>
-              </td>
-            </ng-container>
+                <button mat-menu-item (click)="editRestaurant(store)" class="menu-item">
+                  <mat-icon>edit</mat-icon>
+                  <span>{{ 'restaurants.edit' | translate }}</span>
+                </button>
+                <button mat-menu-item (click)="manageImages(store)" class="menu-item">
+                  <mat-icon>photo_library</mat-icon>
+                  <span>{{ 'restaurants.images' | translate }}</span>
+                </button>
+                <button mat-menu-item (click)="manageHours(store)" class="menu-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ 'restaurants.hours' | translate }}</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="deleteRestaurant(store)" class="menu-item delete-action">
+                  <mat-icon>delete</mat-icon>
+                  <span>{{ 'restaurants.delete' | translate }}</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-        </mat-card>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="data-row"></tr>
+        </table>
       </div>
     </div>
   </div>

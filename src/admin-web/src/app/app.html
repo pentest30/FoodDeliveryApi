@@ -1,4 +1,4 @@
-<mat-sidenav-container class="sidenav-container">
+<mat-sidenav-container class="sidenav-container" *ngIf="!isLoginPage()">
   <!-- Sidebar -->
   <mat-sidenav 
     #drawer 
@@ -8,47 +8,80 @@
     [mode]="isHandset() ? 'over' : 'side'"
     [opened]="!isHandset()">
     
-    <mat-nav-list>
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <div class="logo">
+        <mat-icon class="logo-icon">restaurant</mat-icon>
+        <span class="logo-text">FoodAdmin</span>
+      </div>
+    </div>
+    
+    <mat-nav-list class="nav-list">
       <!-- Home Section -->
-      <h3 matSubheader>{{ 'home' | translate }}</h3>
-      @for (item of sidenavItems[0].items; track item.path) {
-        <a mat-list-item 
-           [routerLink]="item.path" 
-           routerLinkActive="active-nav-item"
-           [matTooltip]="item.label | translate"
-           matTooltipPosition="right">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.label | translate }}</span>
-        </a>
-      }
-      
-      <!-- Logout -->
-      <a mat-list-item (click)="logout()" [matTooltip]="'nav.logout' | translate" matTooltipPosition="right">
-        <mat-icon matListItemIcon>logout</mat-icon>
-        <span matListItemTitle>{{ 'nav.logout' | translate }}</span>
-      </a>
+      <div class="nav-section">
+        <div class="section-header">
+          <mat-icon class="section-icon">home</mat-icon>
+          <span class="section-title">{{ 'home' | translate }}</span>
+        </div>
+        @for (item of sidenavItems[0].items; track item.path) {
+          <a mat-list-item 
+             [routerLink]="item.path" 
+             routerLinkActive="active-nav-item"
+             [matTooltip]="item.label | translate"
+             matTooltipPosition="right"
+             class="nav-item">
+            <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
+            <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
+            <div class="nav-indicator"></div>
+          </a>
+        }
+      </div>
 
-      <mat-divider></mat-divider>
+      <mat-divider class="nav-divider"></mat-divider>
 
       <!-- Resources Section -->
-      <h3 matSubheader>{{ 'resources' | translate }}</h3>
-      @for (item of sidenavItems[1].items; track item.path) {
-        <a mat-list-item 
-           [routerLink]="item.path" 
-           routerLinkActive="active-nav-item"
-           [matTooltip]="item.label | translate"
-           matTooltipPosition="right">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.label | translate }}</span>
-        </a>
-      }
+      <div class="nav-section">
+        <div class="section-header">
+          <mat-icon class="section-icon">widgets</mat-icon>
+          <span class="section-title">{{ 'resources' | translate }}</span>
+        </div>
+        @for (item of sidenavItems[1].items; track item.path) {
+          <a mat-list-item 
+             [routerLink]="item.path" 
+             routerLinkActive="active-nav-item"
+             [matTooltip]="item.label | translate"
+             matTooltipPosition="right"
+             class="nav-item">
+            <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
+            <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
+            <div class="nav-indicator"></div>
+          </a>
+        }
+      </div>
 
-      <mat-divider></mat-divider>
+      <mat-divider class="nav-divider"></mat-divider>
 
       <!-- About (Footer) -->
-      <a mat-list-item [routerLink]="'/about'" routerLinkActive="active-nav-item" [matTooltip]="'about' | translate" matTooltipPosition="right">
-        <mat-icon matListItemIcon>info</mat-icon>
-        <span matListItemTitle>{{ 'about' | translate }}</span>
+      <a mat-list-item 
+         [routerLink]="'/about'" 
+         routerLinkActive="active-nav-item" 
+         [matTooltip]="'about' | translate" 
+         matTooltipPosition="right"
+         class="nav-item">
+        <mat-icon matListItemIcon class="nav-icon">info</mat-icon>
+        <span matListItemTitle class="nav-text">{{ 'about' | translate }}</span>
+        <div class="nav-indicator"></div>
+      </a>
+
+      <!-- Logout -->
+      <a mat-list-item 
+         (click)="logout()" 
+         [matTooltip]="'nav.logout' | translate" 
+         matTooltipPosition="right"
+         class="nav-item logout-item">
+        <mat-icon matListItemIcon class="nav-icon">logout</mat-icon>
+        <span matListItemTitle class="nav-text">{{ 'nav.logout' | translate }}</span>
+        <div class="nav-indicator"></div>
       </a>
     </mat-nav-list>
   </mat-sidenav>
@@ -56,62 +89,122 @@
   <!-- Main Content -->
   <mat-sidenav-content>
     <!-- Top Toolbar -->
-    <mat-toolbar color="primary" class="top-toolbar">
-      <!-- Hamburger menu for mobile -->
-      @if (isHandset()) {
-        <button
-          type="button"
-          aria-label="Toggle sidenav"
-          mat-icon-button
-          (click)="drawer.toggle()">
-          <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
-        </button>
-      }
+    <mat-toolbar class="top-toolbar">
+      <div class="toolbar-left">
+        <!-- Hamburger menu for mobile -->
+        @if (isHandset()) {
+          <button
+            type="button"
+            aria-label="Toggle sidenav"
+            mat-icon-button
+            (click)="drawer.toggle()"
+            class="menu-button">
+            <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+          </button>
+        }
 
-      <!-- Brand -->
-      <span class="brand">{{ 'brand' | translate }}</span>
-
-      <span class="spacer"></span>
-
-      <!-- Language Switcher -->
-      <button mat-icon-button [matMenuTriggerFor]="langMenu" [matTooltip]="'Language'">
-        <mat-icon>translate</mat-icon>
-      </button>
-      <mat-menu #langMenu="matMenu">
-        <button mat-menu-item (click)="switchLanguage('en')" [class.active-lang]="currentLang() === 'en'">
-          {{ 'lang.en' | translate }}
-        </button>
-        <button mat-menu-item (click)="switchLanguage('fr')" [class.active-lang]="currentLang() === 'fr'">
-          {{ 'lang.fr' | translate }}
-        </button>
-        <button mat-menu-item (click)="switchLanguage('ar')" [class.active-lang]="currentLang() === 'ar'">
-          {{ 'lang.ar' | translate }}
-        </button>
-      </mat-menu>
-
-      <!-- Notifications -->
-      <button mat-icon-button [matTooltip]="'Notifications'">
-        <mat-icon [matBadge]="notificationCount()" matBadgeColor="accent">notifications</mat-icon>
-      </button>
-
-      <!-- User Menu -->
-      <button mat-icon-button [matMenuTriggerFor]="userMenu" [matTooltip]="'John Doe'">
-        <mat-icon>account_circle</mat-icon>
-      </button>
-      <mat-menu #userMenu="matMenu">
-        <div class="user-info">
-          <span>John Doe</span>
+        <!-- Brand -->
+        <div class="brand">
+          <mat-icon class="brand-icon">restaurant</mat-icon>
+          <span class="brand-text">{{ 'brand' | translate }}</span>
         </div>
-        <mat-divider></mat-divider>
-        <button mat-menu-item [routerLink]="'/account'">
-          <mat-icon>account_circle</mat-icon>
-          <span>{{ 'nav.account' | translate }}</span>
+      </div>
+
+      <div class="toolbar-center">
+        <!-- Search Bar -->
+        <div class="search-container">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input type="text" placeholder="Search..." class="search-input">
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Language Switcher -->
+        <button mat-icon-button [matMenuTriggerFor]="langMenu" [matTooltip]="'Language'" class="toolbar-button">
+          <mat-icon>translate</mat-icon>
         </button>
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          <span>{{ 'nav.logout' | translate }}</span>
+        <mat-menu #langMenu="matMenu" class="language-menu">
+          <button mat-menu-item (click)="switchLanguage('en')" [class.active-lang]="currentLang() === 'en'">
+            <mat-icon>flag</mat-icon>
+            <span>{{ 'lang.en' | translate }}</span>
+          </button>
+          <button mat-menu-item (click)="switchLanguage('fr')" [class.active-lang]="currentLang() === 'fr'">
+            <mat-icon>flag</mat-icon>
+            <span>{{ 'lang.fr' | translate }}</span>
+          </button>
+          <button mat-menu-item (click)="switchLanguage('ar')" [class.active-lang]="currentLang() === 'ar'">
+            <mat-icon>flag</mat-icon>
+            <span>{{ 'lang.ar' | translate }}</span>
+          </button>
+        </mat-menu>
+
+        <!-- Notifications -->
+        <button mat-icon-button [matMenuTriggerFor]="notificationMenu" [matTooltip]="'Notifications'" class="toolbar-button">
+          <mat-icon [matBadge]="notificationCount()" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
         </button>
-      </mat-menu>
+        <mat-menu #notificationMenu="matMenu" class="notification-menu">
+          <div class="notification-header">
+            <h3>Notifications</h3>
+            <button mat-icon-button class="mark-all-read">
+              <mat-icon>done_all</mat-icon>
+            </button>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item class="notification-item">
+            <mat-icon class="notification-icon info">info</mat-icon>
+            <div class="notification-content">
+              <span class="notification-title">System Update Available</span>
+              <span class="notification-time">2 hours ago</span>
+            </div>
+          </button>
+          <button mat-menu-item class="notification-item">
+            <mat-icon class="notification-icon warning">warning</mat-icon>
+            <div class="notification-content">
+              <span class="notification-title">Security Alert</span>
+              <span class="notification-time">4 hours ago</span>
+            </div>
+          </button>
+          <button mat-menu-item class="notification-item">
+            <mat-icon class="notification-icon success">check_circle</mat-icon>
+            <div class="notification-content">
+              <span class="notification-title">Backup Completed</span>
+              <span class="notification-time">1 day ago</span>
+            </div>
+          </button>
+        </mat-menu>
+
+        <!-- User Menu -->
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" [matTooltip]="currentUser()?.firstName + ' ' + currentUser()?.lastName" class="user-button">
+          <div class="user-avatar">
+            <span>{{ currentUser()?.firstName?.charAt(0) }}{{ currentUser()?.lastName?.charAt(0) }}</span>
+          </div>
+        </button>
+        <mat-menu #userMenu="matMenu" class="user-menu">
+          <div class="user-info">
+            <div class="user-avatar-large">
+              <span>{{ currentUser()?.firstName?.charAt(0) }}{{ currentUser()?.lastName?.charAt(0) }}</span>
+            </div>
+            <div class="user-details">
+              <span class="user-name">{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
+              <span class="user-email">{{ currentUser()?.email }}</span>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item [routerLink]="'/account'" class="user-menu-item">
+            <mat-icon>account_circle</mat-icon>
+            <span>{{ 'nav.account' | translate }}</span>
+          </button>
+          <button mat-menu-item [routerLink]="'/settings'" class="user-menu-item">
+            <mat-icon>settings</mat-icon>
+            <span>Settings</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()" class="user-menu-item logout">
+            <mat-icon>logout</mat-icon>
+            <span>{{ 'nav.logout' | translate }}</span>
+          </button>
+        </mat-menu>
+      </div>
     </mat-toolbar>
 
     <!-- Content Area -->
@@ -120,3 +213,8 @@
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>
+
+<!-- Login page without sidebar -->
+<div *ngIf="isLoginPage()" class="login-page-container">
+  <router-outlet></router-outlet>
+</div>

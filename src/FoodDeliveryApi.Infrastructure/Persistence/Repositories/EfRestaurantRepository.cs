@@ -1,5 +1,6 @@
 using FoodDeliveryApi.FoodDeliveryApi.Application.Interfaces;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Restaurants;
+using FoodDeliveryApi.FoodDeliveryApi.Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 namespace FoodDeliveryApi.FoodDeliveryApi.Infrastructure.Persistence.Repositories;
@@ -12,6 +13,12 @@ public class EfRestaurantRepository : IRestaurantRepository
     public async Task<Restaurant?> GetByExternalIdAsync(string externalId, CancellationToken ct)
         => await _db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.ExternalId == externalId, ct);
 
+    public async Task<Restaurant?> GetByIdAsync(Guid id, CancellationToken ct)
+        => await _db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id, ct);
+
+    public async Task<RestaurantSection?> GetSectionByIdAsync(Guid sectionId, CancellationToken ct)
+        => await _db.RestaurantSections.AsNoTracking().FirstOrDefaultAsync(s => s.Id == sectionId, ct);
+
     public async Task<IReadOnlyList<RestaurantSection>> GetSectionsByRestaurantExternalIdAsync(string externalId, CancellationToken ct)
     {
         var restaurant = await _db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.ExternalId == externalId, ct);
@@ -21,7 +28,7 @@ public class EfRestaurantRepository : IRestaurantRepository
     public async Task<(IReadOnlyList<Restaurant> Items, int TotalCount)> SearchAsync(string? city, bool? openNow, string? category, string? q, int page, int pageSize, CancellationToken ct)
     {
         var query = _db.Restaurants
-            .Include(r => r.RestaurantCategories)
+           .Include(r => r.RestaurantCategories)
             .ThenInclude(rc => rc.Category)
             .AsNoTracking()
             .AsQueryable();
@@ -65,6 +72,12 @@ public class EfRestaurantRepository : IRestaurantRepository
         return entity;
     }
 
+    public async Task UpdateAsync(Restaurant update, CancellationToken ct)
+    {
+        _db.Restaurants.Update(update);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> DeleteAsync(string externalId, CancellationToken ct)
     {
         var entity = await _db.Restaurants.FirstOrDefaultAsync(r => r.ExternalId == externalId, ct);
@@ -72,5 +85,12 @@ public class EfRestaurantRepository : IRestaurantRepository
         _db.Restaurants.Remove(entity);
         await _db.SaveChangesAsync(ct);
         return true;
+    }
+
+    public async Task<IReadOnlyList<Category>> GetCategoriesByExternalIdsAsync(List<string> externalIds, CancellationToken ct)
+    {
+        return await _db.Categories
+            .Where(c => externalIds.Contains(c.ExternalId))
+            .ToListAsync(ct);
     }
 }

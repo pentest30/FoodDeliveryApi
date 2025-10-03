@@ -24,7 +24,7 @@ export class StoreService {
     public static getStore(): CancelablePromise<Store | null> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/store',
+            url: '/store',
         });
     }
 
@@ -37,7 +37,7 @@ export class StoreService {
     public static upsertStore(requestBody: UpsertStoreRequest): CancelablePromise<Store> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/store',
+            url: '/store',
             body: requestBody,
         });
     }

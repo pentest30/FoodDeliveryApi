@@ -1,0 +1,111 @@
+<div class="user-dialog">
+  <h2 mat-dialog-title>
+    {{ isCreateMode ? 'Create New User' : 'Edit User' }}
+  </h2>
+
+  <mat-dialog-content>
+    <mat-tab-group>
+      <!-- User Information Tab -->
+      <mat-tab label="User Information">
+        <form [formGroup]="userForm" class="user-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" type="email" required>
+              <mat-error *ngIf="getFieldError('email')">
+                {{ getFieldError('email') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>First Name</mat-label>
+              <input matInput formControlName="firstName" required>
+              <mat-error *ngIf="getFieldError('firstName')">
+                {{ getFieldError('firstName') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>Last Name</mat-label>
+              <input matInput formControlName="lastName" required>
+              <mat-error *ngIf="getFieldError('lastName')">
+                {{ getFieldError('lastName') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Roles</mat-label>
+              <mat-select formControlName="roles" multiple required>
+                <mat-option *ngFor="let role of availableRoles()" [value]="role">
+                  {{ role }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="getFieldError('roles')">
+                {{ getFieldError('roles') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-checkbox formControlName="isActive">
+              Active User
+            </mat-checkbox>
+          </div>
+        </form>
+      </mat-tab>
+
+      <!-- Password Tab (only for create mode) -->
+      <mat-tab *ngIf="isCreateMode" label="Password">
+        <form [formGroup]="passwordForm" class="password-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Password</mat-label>
+              <input matInput formControlName="password" type="password" required>
+              <mat-error *ngIf="getPasswordFieldError('password')">
+                {{ getPasswordFieldError('password') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Confirm Password</mat-label>
+              <input matInput formControlName="confirmPassword" type="password" required>
+              <mat-error *ngIf="getPasswordFieldError('confirmPassword')">
+                {{ getPasswordFieldError('confirmPassword') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="password-requirements">
+            <h4>Password Requirements:</h4>
+            <ul>
+              <li>At least 6 characters long</li>
+              <li>Must contain letters and numbers</li>
+              <li>Passwords must match</li>
+            </ul>
+          </div>
+        </form>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isLoading()">
+      Cancel
+    </button>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="onSubmit()" 
+      [disabled]="isLoading() || (isCreateMode ? !userForm.valid || !passwordForm.valid : !userForm.valid)">
+      <mat-spinner *ngIf="isLoading()" diameter="20"></mat-spinner>
+      <span *ngIf="!isLoading()">{{ isCreateMode ? 'Create User' : 'Update User' }}</span>
+    </button>
+  </mat-dialog-actions>
+</div>
+

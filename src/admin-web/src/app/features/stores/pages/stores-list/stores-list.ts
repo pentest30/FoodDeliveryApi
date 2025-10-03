@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,6 +18,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged, startWith, switchMap, catchError } from 'rxjs/operators';
 import { of, combineLatest } from 'rxjs';
@@ -49,6 +51,8 @@ import { StoreHoursDialogComponent, StoreHoursDialogData } from '../../ui/store-
     MatDividerModule,
     MatSnackBarModule,
     MatDialogModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
     TranslateModule
   ],
   templateUrl: './stores-list.component.html',
@@ -61,6 +65,7 @@ export class RestaurantsListComponent implements OnInit {
   private restaurantsService = inject(RestaurantsService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   // Form controls
   searchControl = new FormControl('');
@@ -77,7 +82,7 @@ export class RestaurantsListComponent implements OnInit {
   pageIndex = signal(0);
 
   // Table configuration
-  displayedColumns = ['thumbnail', 'name', 'city', 'rating', 'eta', 'status', 'created', 'actions'];
+  displayedColumns = ['name', 'city', 'rating', 'eta', 'status', 'created', 'actions'];
 
   ngOnInit() {
     this.loadCities();
@@ -220,5 +225,9 @@ export class RestaurantsListComponent implements OnInit {
         }
       });
     }
+  }
+
+  viewRestaurant(restaurant: RestaurantDto) {
+    this.router.navigate(['/restaurants', restaurant.id]);
   }
 }
