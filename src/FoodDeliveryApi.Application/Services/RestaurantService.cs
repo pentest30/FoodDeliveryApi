@@ -23,7 +23,10 @@ public class RestaurantService
     {
         return await _repository.GetByExternalIdAsync(externalId, ct);
     }
-
+    public async Task<Restaurant?> GetByIdAsync(string id, CancellationToken ct)
+    {
+        return await _repository.GetByIdAsync(Guid.Parse(id), ct);
+    }
     public async Task<IReadOnlyList<RestaurantSection>> GetSectionsByRestaurantExternalIdAsync(string externalId, CancellationToken ct)
     {
         return await _repository.GetSectionsByRestaurantExternalIdAsync(externalId, ct);

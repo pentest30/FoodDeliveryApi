@@ -44,7 +44,7 @@ export class AuthService {
   private readonly USER_KEY = 'user_info';
   private readonly TENANT_KEY = 'tenant_id';
 
-  private authState = new BehaviorSubject<AuthState>({
+  private readonly authState = new BehaviorSubject<AuthState>({
     isAuthenticated: false,
     user: null,
     token: null,
@@ -54,8 +54,8 @@ export class AuthService {
   public authState$ = this.authState.asObservable();
 
   constructor(
-    private http: HttpClient,
-    private router: Router
+    private readonly http: HttpClient,
+    private readonly router: Router
   ) {
     this.initializeAuth();
   }
@@ -68,15 +68,52 @@ export class AuthService {
     if (token && user && tenantId) {
       try {
         const userInfo = JSON.parse(user);
-        this.authState.next({
-          isAuthenticated: true,
-          user: userInfo,
-          token,
-          tenantId
-        });
+        // Check if token is still valid (not expired)
+        if (this.isTokenValid(token)) {
+          this.authState.next({
+            isAuthenticated: true,
+            user: userInfo,
+            token,
+            tenantId
+          });
+        } else {
+          // Token is expired, clear auth
+          this.clearAuth();
+        }
       } catch (error) {
+        console.error('Error parsing user info from localStorage:', error);
         this.clearAuth();
       }
+    } else {
+      // No valid auth data, ensure we start with unauthenticated state
+      this.authState.next({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        tenantId: null
+      });
+    }
+  }
+
+  private isTokenValid(token: string): boolean {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return false;
+      }
+
+      const payload = JSON.parse(atob(parts[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      // Check if token is expired
+      if (payload.exp && payload.exp < currentTime) {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error validating token:', error);
+      return false;
     }
   }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
@@ -23,8 +23,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged, startWith, switchMap, catchError, map } from 'rxjs/operators';
 import { of, combineLatest, Observable } from 'rxjs';
 
-import { SectionsService, RestaurantSectionDto, SectionListParams } from '../../data/sections.service';
+import { SectionsService, RestaurantSectionDto } from '../../data/sections.service';
 import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dialog/section-dialog.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { InlineEditComponent } from '../../../../shared/components/inline-edit/inline-edit.component';
+import { ImageUploadDialogComponent } from '../../../../shared/components/image-upload-dialog/image-upload-dialog.component';
 
 @Component({
   selector: 'app-sections-list',
@@ -50,7 +53,10 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
     MatDialogModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    TranslateModule
+    TranslateModule,
+    EmptyStateComponent,
+    InlineEditComponent,
+    ImageUploadDialogComponent
   ],
   template: `
     <div class="sections-container">
@@ -62,7 +68,7 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
               <mat-icon class="page-icon">category</mat-icon>
             </div>
             <div class="title-text">
-              <h1 class="page-title">Sections</h1>
+              <h1 class="page-title">Menu Categories</h1>
               <p class="page-subtitle">Manage restaurant sections and menu organization</p>
             </div>
           </div>
@@ -105,6 +111,15 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
               <mat-spinner diameter="40"></mat-spinner>
               <p>Loading sections...</p>
             </div>
+          } @else if (sections().length === 0) {
+            <app-empty-state
+              icon="category"
+              iconClass="primary"
+              title="No menu sections yet"
+              description="Click 'New Section' to create your first menu section and start organizing your menu items."
+              actionText="Create New Section"
+              [actionClick]="createSection">
+            </app-empty-state>
           } @else {
             <table mat-table [dataSource]="sections()" class="sections-table">
               <!-- Name Column -->
@@ -121,7 +136,12 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
               <ng-container matColumnDef="description">
                 <th mat-header-cell *matHeaderCellDef>DESCRIPTION</th>
                 <td mat-cell *matCellDef="let section">
-                  <span class="section-description">{{ section.description }}</span>
+                  <app-inline-edit
+                    [value]="section.description"
+                    type="text"
+                    placeholder="Enter description"
+                    (saveChange)="updateSectionDescription(section, $event)">
+                  </app-inline-edit>
                 </td>
               </ng-container>
 
@@ -137,7 +157,12 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
               <ng-container matColumnDef="sortOrder">
                 <th mat-header-cell *matHeaderCellDef>SORT ORDER</th>
                 <td mat-cell *matCellDef="let section">
-                  <span class="sort-order">{{ section.sortOrder }}</span>
+                  <app-inline-edit
+                    [value]="section.sortOrder"
+                    type="number"
+                    placeholder="Enter sort order"
+                    (saveChange)="updateSectionSortOrder(section, $event)">
+                  </app-inline-edit>
                 </td>
               </ng-container>
 
@@ -145,11 +170,12 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>STATUS</th>
                 <td mat-cell *matCellDef="let section">
-                  <mat-chip 
-                    [class]="getStatusClass(section.active)"
-                    class="status-chip">
-                    {{ getStatusText(section.active) }}
-                  </mat-chip>
+                  <app-inline-edit
+                    [value]="section.active"
+                    type="chip"
+                    [options]="statusOptions"
+                    (saveChange)="updateSectionStatus(section, $event)">
+                  </app-inline-edit>
                 </td>
               </ng-container>
 
@@ -161,24 +187,18 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
                 </td>
               </ng-container>
 
+
               <!-- Actions Column -->
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
                 <td mat-cell *matCellDef="let section">
-                  <div class="actions-container">
-                    <button mat-icon-button 
-                            class="edit-button" 
-                            (click)="editSection(section)"
-                            matTooltip="Edit section">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button 
-                            class="delete-button" 
-                            (click)="deleteSection(section)"
-                            matTooltip="Delete section">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
+                  <button mat-icon-button 
+                          [matMenuTriggerFor]="actionsMenu"
+                          class="actions-context-button"
+                          (click)="setSelectedItem(section)"
+                          matTooltip="Actions">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
                 </td>
               </ng-container>
 
@@ -197,6 +217,36 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
           }
         </div>
       </mat-card>
+
+      <!-- Context Menu -->
+      <mat-menu #actionsMenu="matMenu" class="actions-context-menu">
+        <button mat-menu-item (click)="editSection(selectedItem)" *ngIf="selectedItem">
+          <mat-icon>edit</mat-icon>
+          <span>Edit Section</span>
+        </button>
+        <button mat-menu-item (click)="duplicateSection(selectedItem)" *ngIf="selectedItem">
+          <mat-icon>content_copy</mat-icon>
+          <span>Duplicate</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="openImageUpload(selectedItem)" *ngIf="selectedItem">
+          <mat-icon>add_photo_alternate</mat-icon>
+          <span>Upload Images</span>
+        </button>
+        <button mat-menu-item (click)="viewImages(selectedItem)" *ngIf="selectedItem && selectedItem.images && selectedItem.images.length > 0">
+          <mat-icon>photo_library</mat-icon>
+          <span>View All Images</span>
+        </button>
+        <button mat-menu-item (click)="removeAllImages(selectedItem)" *ngIf="selectedItem && selectedItem.images && selectedItem.images.length > 0">
+          <mat-icon>delete_sweep</mat-icon>
+          <span>Remove All Images</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="deleteSection(selectedItem)" *ngIf="selectedItem" class="delete-action">
+          <mat-icon>delete</mat-icon>
+          <span>Delete</span>
+        </button>
+      </mat-menu>
     </div>
   `,
   styles: [`
@@ -206,12 +256,13 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
 
     /* Header Section */
     .page-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 32px;
-      border-radius: 16px;
+      background: white;
+      color: #333;
+      padding: 24px;
+      border-radius: 8px;
       margin-bottom: 24px;
-      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e0e0e0;
     }
 
     .header-content {
@@ -231,38 +282,37 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
     .title-icon {
       width: 64px;
       height: 64px;
-      background: rgba(255, 255, 255, 0.2);
+      background: #f5f5f5;
       border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(10px);
     }
 
     .page-icon {
       font-size: 32px;
       width: 32px;
       height: 32px;
-      color: white;
+      color: #666;
     }
 
     .page-title {
       font-size: 32px;
       font-weight: 700;
       margin: 0;
-      color: white;
+      color: #333;
     }
 
     .page-subtitle {
       font-size: 16px;
       margin: 4px 0 0 0;
-      color: rgba(255, 255, 255, 0.8);
+      color: #666;
     }
 
     .add-section-btn {
-      background: rgba(255, 255, 255, 0.2);
+      background: #1976d2;
       color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: none;
       border-radius: 12px;
       padding: 12px 24px;
       font-weight: 600;
@@ -376,6 +426,53 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
       font-size: 14px;
     }
 
+    .section-image-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-image {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .no-image-placeholder {
+      width: 50px;
+      height: 50px;
+      background: #f8fafc;
+      border: 1px dashed #e2e8f0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+    }
+
+    .no-image-placeholder mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .upload-image-button {
+      width: 32px;
+      height: 32px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+    }
+
+    .upload-image-button:hover {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+
     .actions-container {
       display: flex;
       gap: 8px;
@@ -447,16 +544,32 @@ import { SectionDialogComponent, SectionDialogData } from '../../ui/section-dial
         min-width: auto;
       }
     }
+
+    .actions-context-menu {
+      min-width: 180px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 1px solid #e2e8f0;
+    }
+
+    .delete-action {
+      color: #dc2626;
+    }
+
+    .delete-action:hover {
+      background-color: #fef2f2;
+    }
   `]
 })
 export class SectionsListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @Input() restaurantId?: string;
 
-  private sectionsService = inject(SectionsService);
-  private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
-  private router = inject(Router);
+  private readonly sectionsService = inject(SectionsService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   // Form controls
   searchControl = new FormControl('');
@@ -471,6 +584,14 @@ export class SectionsListComponent implements OnInit {
 
   // Table configuration
   displayedColumns = ['name', 'description', 'items', 'sortOrder', 'status', 'created', 'actions'];
+  
+  protected readonly statusOptions = [
+    { value: true, label: 'Active' },
+    { value: false, label: 'Inactive' }
+  ];
+
+  // Context menu
+  selectedItem: RestaurantSectionDto | null = null;
 
   ngOnInit() {
     this.setupSearch();
@@ -492,15 +613,33 @@ export class SectionsListComponent implements OnInit {
   private loadSections(): Observable<void> {
     this.loading.set(true);
 
-    // For now, we'll show empty data since we don't have a backend endpoint
-    // to get all sections across restaurants
-    // The dialog will allow users to select a restaurant and create sections
-    
-    this.sections.set([]);
-    this.totalCount.set(0);
-    this.loading.set(false);
-    
-    return of();
+    if (this.restaurantId) {
+      // Load sections for specific restaurant
+      return this.sectionsService.getSectionsByRestaurant(this.restaurantId).pipe(
+        map(sections => {
+          this.sections.set(sections);
+          this.totalCount.set(sections.length);
+          this.loading.set(false);
+        }),
+        catchError(error => {
+          console.error('Error loading sections:', error);
+          this.sections.set([]);
+          this.totalCount.set(0);
+          this.loading.set(false);
+          return of();
+        })
+      );
+    } else {
+      // For now, we'll show empty data since we don't have a backend endpoint
+      // to get all sections across restaurants
+      // The dialog will allow users to select a restaurant and create sections
+      
+      this.sections.set([]);
+      this.totalCount.set(0);
+      this.loading.set(false);
+      
+      return of();
+    }
   }
 
   protected onPageChange(event: any) {
@@ -511,7 +650,8 @@ export class SectionsListComponent implements OnInit {
 
   protected createSection() {
     const dialogData: SectionDialogData = {
-      mode: 'create'
+      mode: 'create',
+      restaurantId: this.restaurantId
     };
 
     const dialogRef = this.dialog.open(SectionDialogComponent, {
@@ -574,11 +714,17 @@ export class SectionsListComponent implements OnInit {
   }
 
   protected getStatusText(active: boolean): string {
-    return active ? 'Active' : 'Inactive';
+    if (active) {
+      return 'Active';
+    }
+    return 'Inactive';
   }
 
   protected getStatusClass(active: boolean): string {
-    return active ? 'status-active' : 'status-inactive';
+    if (active) {
+      return 'status-active';
+    }
+    return 'status-inactive';
   }
 
   protected formatDate(dateString: string): string {
@@ -587,5 +733,103 @@ export class SectionsListComponent implements OnInit {
       month: 'short',
       day: 'numeric'
     });
+  }
+
+  protected updateSectionDescription(section: RestaurantSectionDto, newDescription: string) {
+    this.sectionsService.updateSection(section.id, {
+      name: section.name,
+      description: newDescription,
+      sortOrder: section.sortOrder,
+      active: section.active
+    }).subscribe({
+      next: () => {
+        section.description = newDescription;
+        this.snackBar.open('Description updated successfully', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error updating description:', error);
+        this.snackBar.open('Error updating description', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  protected updateSectionSortOrder(section: RestaurantSectionDto, newSortOrder: number) {
+    this.sectionsService.updateSection(section.id, {
+      name: section.name,
+      description: section.description,
+      sortOrder: newSortOrder,
+      active: section.active
+    }).subscribe({
+      next: () => {
+        section.sortOrder = newSortOrder;
+        this.snackBar.open('Sort order updated successfully', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error updating sort order:', error);
+        this.snackBar.open('Error updating sort order', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  protected updateSectionStatus(section: RestaurantSectionDto, newStatus: boolean) {
+    this.sectionsService.updateSection(section.id, {
+      name: section.name,
+      description: section.description,
+      sortOrder: section.sortOrder,
+      active: newStatus
+    }).subscribe({
+      next: () => {
+        section.active = newStatus;
+        this.snackBar.open('Status updated successfully', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error updating status:', error);
+        this.snackBar.open('Error updating status', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  protected onImageError(event: any) {
+    event.target.src = 'https://via.placeholder.com/50x50/e0e0e0/757575?text=No+Image';
+  }
+
+  protected openImageUpload(section: RestaurantSectionDto) {
+    const dialogRef = this.dialog.open(ImageUploadDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      data: {
+        menuItem: section, // Reusing the same interface
+        restaurantId: this.restaurantId
+      },
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadSections().subscribe();
+        this.snackBar.open('Images uploaded successfully', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  protected viewImages(section: RestaurantSectionDto) {
+    // TODO: Implement view images functionality
+    this.snackBar.open('View images functionality not implemented yet', 'Close', { duration: 3000 });
+  }
+
+  protected removeAllImages(section: RestaurantSectionDto) {
+    if (confirm(`Are you sure you want to remove all images for "${section.name}"?`)) {
+      // TODO: Implement remove all images functionality
+      this.snackBar.open('Remove all images functionality not implemented yet', 'Close', { duration: 3000 });
+    }
+  }
+
+  protected duplicateSection(section: RestaurantSectionDto) {
+    // TODO: Implement duplicate functionality
+    this.snackBar.open('Duplicate functionality not implemented yet', 'Close', { duration: 3000 });
+  }
+
+  protected setSelectedItem(item: RestaurantSectionDto) {
+    this.selectedItem = item;
   }
 }

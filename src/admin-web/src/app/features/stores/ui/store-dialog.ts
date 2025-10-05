@@ -79,6 +79,40 @@ export interface StoreDialogData {
             <input matInput formControlName="city" placeholder="Enter city">
           </mat-form-field>
 
+          <!-- Contact Information Section -->
+          <div class="section-header">
+            <mat-icon>contact_phone</mat-icon>
+            <span>Contact Information</span>
+          </div>
+
+          <!-- Email -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email Address</mat-label>
+            <input matInput 
+                   type="email" 
+                   formControlName="email" 
+                   placeholder="restaurant@example.com">
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-hint>Restaurant contact email</mat-hint>
+            <mat-error *ngIf="storeForm.get('email')?.hasError('email')">
+              Please enter a valid email address
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Mobile -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mobile Phone</mat-label>
+            <input matInput 
+                   type="tel" 
+                   formControlName="mobile" 
+                   placeholder="+1234567890">
+            <mat-icon matSuffix>phone</mat-icon>
+            <mat-hint>Restaurant contact phone number</mat-hint>
+            <mat-error *ngIf="storeForm.get('mobile')?.hasError('pattern')">
+              Please enter a valid phone number
+            </mat-error>
+          </mat-form-field>
+
           <!-- Location Section -->
           <div class="section-header">
             <mat-icon>location_on</mat-icon>
@@ -461,6 +495,8 @@ export class StoreDialogComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       addressLine1: [''],
       city: [''],
+      email: ['', [Validators.email]],
+      mobile: ['', [Validators.pattern(/^[\+]?[1-9][\d]{0,15}$/)]],
       lat: [null, [Validators.min(-90), Validators.max(90)]],
       lng: [null, [Validators.min(-180), Validators.max(180)]],
       serviceRadiusKm: [null, [Validators.min(0), Validators.max(100)]],
@@ -479,6 +515,8 @@ export class StoreDialogComponent implements OnInit {
       name: store.name,
       addressLine1: store.addressLine || '',
       city: store.city || '',
+      email: store.email || '',
+      mobile: store.mobile || '',
       lat: store.lat,
       lng: store.lng,
       serviceRadiusKm: store.serviceRadiusKm,
@@ -501,6 +539,8 @@ export class StoreDialogComponent implements OnInit {
       name: formValue.name,
       addressLine1: formValue.addressLine1 || undefined,
       city: formValue.city || undefined,
+      email: formValue.email || undefined,
+      mobile: formValue.mobile || undefined,
       lat: formValue.lat || undefined,
       lng: formValue.lng || undefined,
       serviceRadiusKm: formValue.serviceRadiusKm || undefined,

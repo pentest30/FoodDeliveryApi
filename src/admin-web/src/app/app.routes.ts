@@ -21,14 +21,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/customers/customers').then(m => m.CustomersPage),
     canActivate: [AuthGuard]
   },
-  { 
-    path: 'sections', 
-    loadComponent: () => import('./pages/sections/sections').then(m => m.SectionsPage),
-    canActivate: [AuthGuard]
-  },
   {
     path: 'users',
     loadComponent: () => import('./features/users/pages/user-list/user-list.component').then(m => m.UserListComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'restaurants',
+    loadComponent: () => import('./features/stores/pages/stores-list/stores-list').then(m => m.RestaurantsListComponent),
     canActivate: [AuthGuard]
   },
   {

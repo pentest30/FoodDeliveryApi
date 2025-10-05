@@ -48,7 +48,6 @@ public class RestaurantMenuItem
 
         return new RestaurantMenuItem
         {
-            Id = Guid.NewGuid(),
             Name = name.Trim(),
             Description = description?.Trim() ?? string.Empty,
             BasePrice = basePrice,
@@ -163,6 +162,11 @@ public class RestaurantMenuItem
     {
         var basePrice = BasePrice ?? 0m;
         return basePrice * Quantity;
+    }
+
+    public void SetRestaurantId(Guid restaurantId)
+    {
+        RestaurantId = restaurantId;
     }
 }
 

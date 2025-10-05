@@ -13,6 +13,8 @@ export interface RestaurantDto {
   etaMinutes: number;
   distanceKm: number;
   city: string;
+  email: string;
+  mobile: string;
   isOpenNow: boolean;
   icon: string;
   primaryColor: string;

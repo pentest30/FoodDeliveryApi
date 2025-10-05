@@ -107,6 +107,8 @@ public static class DbSeeder
                     m.City,
                     m.EtaMinutes,
                     (decimal)m.DistanceKm,
+                    "", // email
+                    "", // mobile
                     m.Icon,
                     m.PrimaryColor,
                     new List<string> { m.CoverImageUrl }

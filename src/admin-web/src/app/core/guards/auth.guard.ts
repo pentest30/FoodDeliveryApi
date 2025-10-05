@@ -9,8 +9,8 @@ import { AuthService } from '../services/auth.service';
 })
 export class AuthGuard implements CanActivate {
   constructor(
-    private authService: AuthService,
-    private router: Router
+    private readonly authService: AuthService,
+    private readonly router: Router
   ) {}
 
   canActivate(): Observable<boolean> {
@@ -19,7 +19,10 @@ export class AuthGuard implements CanActivate {
         if (authState.isAuthenticated) {
           return true;
         } else {
-          this.router.navigate(['/login']);
+          // Only navigate to login if we're not already there
+          if (!this.router.url.includes('/login')) {
+            this.router.navigate(['/login']);
+          }
           return false;
         }
       })

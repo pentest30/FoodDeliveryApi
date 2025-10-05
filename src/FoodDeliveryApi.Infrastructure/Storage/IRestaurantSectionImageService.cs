@@ -9,3 +9,4 @@ public interface IRestaurantSectionImageService
     Task<bool> ValidateImageAsync(IFormFile file);
 }
 
+

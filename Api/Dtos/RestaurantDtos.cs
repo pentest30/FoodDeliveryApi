@@ -9,6 +9,8 @@ public class UpsertRestaurantDto
     public int EtaMinutes { get; set; }
     public decimal DistanceKm { get; set; }
     public string City { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Mobile { get; set; } = string.Empty;
     public bool IsOpenNow { get; set; }
     public string Icon { get; set; } = string.Empty;
     public string PrimaryColor { get; set; } = string.Empty;

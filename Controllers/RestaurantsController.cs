@@ -46,6 +46,8 @@ public class RestaurantsController : ControllerBase
             Categories = r.RestaurantCategories.Select(rc => rc.Category.Name).ToList(),
             CategoryIds = r.RestaurantCategories.Select(rc => rc.Category.ExternalId).ToList(),
             City = r.City,
+            Email = r.Email,
+            Mobile = r.Mobile,
             IsOpenNow = r.IsOpenNow,
             Icon = r.Icon,
             PrimaryColor = r.PrimaryColor,
@@ -68,7 +70,7 @@ public class RestaurantsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<RestaurantDto>> GetRestaurantById(string id, CancellationToken ct)
     {
-        var r = await _restaurantService.GetByExternalIdAsync(id, ct);
+        var r = await _restaurantService.GetByIdAsync(id, ct);
         if (r is null) return NotFound(new { message = $"Restaurant with ID '{id}' not found" });
         
         var model = new RestaurantDto
@@ -82,6 +84,8 @@ public class RestaurantsController : ControllerBase
             Categories = r.RestaurantCategories.Select(rc => rc.Category.Name).ToList(),
             CategoryIds = r.RestaurantCategories.Select(rc => rc.Category.ExternalId).ToList(),
             City = r.City,
+            Email = r.Email,
+            Mobile = r.Mobile,
             IsOpenNow = r.IsOpenNow,
             Icon = r.Icon,
             PrimaryColor = r.PrimaryColor,
@@ -124,6 +128,8 @@ public class RestaurantsController : ControllerBase
                 dto.City,
                 dto.EtaMinutes,
                 dto.DistanceKm,
+                dto.Email,
+                dto.Mobile,
                 dto.Icon,
                 dto.PrimaryColor,
                 dto.Images,
@@ -147,7 +153,7 @@ public class RestaurantsController : ControllerBase
         {
             var updated = await _restaurantService.UpdateAsync(id, r =>
             {
-                r.UpdateBasicInfo(dto.Name, dto.City, dto.EtaMinutes, dto.DistanceKm);
+                r.UpdateBasicInfo(dto.Name, dto.City, dto.EtaMinutes, dto.DistanceKm, dto.Email, dto.Mobile);
                 r.UpdateAppearance(dto.Icon, dto.PrimaryColor);
                 r.UpdateRating(dto.Rating);
                 r.SetOpenStatus(dto.IsOpenNow);

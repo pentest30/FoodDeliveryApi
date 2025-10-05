@@ -13,7 +13,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
 import { AuthService, UserInfo } from './core/services/auth.service';
-import { Observable } from 'rxjs';
+import { BreadcrumbComponent } from './shared/components/breadcrumb/breadcrumb.component';
+import { ThemeToggleComponent } from './shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-root',
@@ -31,16 +32,18 @@ import { Observable } from 'rxjs';
     MatMenuModule,
     MatBadgeModule,
     MatTabsModule,
-    MatTooltipModule
+    MatTooltipModule,
+    BreadcrumbComponent,
+    ThemeToggleComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  private breakpointObserver = inject(BreakpointObserver);
-  private translateService = inject(TranslateService);
-  private router = inject(Router);
-  private authService = inject(AuthService);
+  private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly translateService = inject(TranslateService);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   protected readonly title = signal('admin-web');
   protected readonly isHandset = signal(false);
@@ -48,6 +51,11 @@ export class App implements OnInit {
   protected readonly notificationCount = signal(3);
   protected readonly currentUser = signal<UserInfo | null>(null);
   protected readonly isAuthenticated = signal(false);
+  protected readonly expandedSections = signal({
+    home: true,
+    restaurants: true,
+    resources: false
+  });
 
   protected readonly moduleRoutes: any[] = [];
 
@@ -57,9 +65,14 @@ export class App implements OnInit {
       items: [
         { path: '/dashboard', icon: 'dashboard', label: 'nav.dashboard' },
         { path: '/customers', icon: 'people', label: 'nav.customers' },
-        { path: '/sections', icon: 'category', label: 'nav.sections' },
         { path: '/users', icon: 'group', label: 'nav.users' },
         { path: '/account', icon: 'account_circle', label: 'nav.account' }
+      ]
+    },
+    {
+      section: 'restaurants',
+      items: [
+        { path: '/restaurants', icon: 'restaurant', label: 'nav.restaurants' }
       ]
     },
     {
@@ -80,16 +93,23 @@ export class App implements OnInit {
 
     // Set initial language
     this.translateService.setDefaultLang('en');
-    this.translateService.use('en');
+    this.translateService.use('en').subscribe();
 
     // Subscribe to authentication state
     this.authService.authState$.subscribe(authState => {
       this.isAuthenticated.set(authState.isAuthenticated);
       this.currentUser.set(authState.user);
       
-      // Redirect to login if not authenticated
-      if (!authState.isAuthenticated && !this.router.url.includes('/login')) {
-        this.router.navigate(['/login']);
+      // Only redirect to login if not authenticated AND we're not already on login page
+      // Skip redirect for root path to allow proper routing
+      if (!authState.isAuthenticated && 
+          !this.router.url.includes('/login')) {
+        // Small delay to ensure router has processed the current route
+        setTimeout(() => {
+          if (!this.router.url.includes('/login')) {
+            this.router.navigate(['/login']);
+          }
+        }, 100);
       }
     });
   }
@@ -121,5 +141,13 @@ export class App implements OnInit {
 
   protected navigateToModule(path: string) {
     this.router.navigate([path]);
+  }
+
+  protected toggleSection(section: string) {
+    const current = this.expandedSections();
+    this.expandedSections.set({
+      ...current,
+      [section]: !current[section as keyof typeof current]
+    });
   }
 }

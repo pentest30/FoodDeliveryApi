@@ -14,14 +14,18 @@ public class EfRestaurantRepository : IRestaurantRepository
         => await _db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.ExternalId == externalId, ct);
 
     public async Task<Restaurant?> GetByIdAsync(Guid id, CancellationToken ct)
-        => await _db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id, ct);
+        => await _db.Restaurants.FirstOrDefaultAsync(r => r.Id == id, ct);
 
     public async Task<RestaurantSection?> GetSectionByIdAsync(Guid sectionId, CancellationToken ct)
-        => await _db.RestaurantSections.AsNoTracking().FirstOrDefaultAsync(s => s.Id == sectionId, ct);
+        => await _db.RestaurantSections.FirstOrDefaultAsync(s => s.Id == sectionId, ct);
 
     public async Task<IReadOnlyList<RestaurantSection>> GetSectionsByRestaurantExternalIdAsync(string externalId, CancellationToken ct)
     {
-        var restaurant = await _db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.ExternalId == externalId, ct);
+        var restaurant = await _db.Restaurants
+            .Include(r =>r.RestaurantSections)
+            .ThenInclude( r =>r.MenuItems)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == Guid.Parse(externalId), ct);
         return restaurant?.RestaurantSections ?? new List<RestaurantSection>();
     }
 

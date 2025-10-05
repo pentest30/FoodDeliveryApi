@@ -83,6 +83,7 @@ public class RestaurantSection
             throw new InvalidOperationException("Menu item with this ID already exists in this section");
 
         menuItem.SetRestaurantSectionId(Id);
+        menuItem.SetRestaurantId(RestaurantId);
         MenuItems.Add(menuItem);
         UpdatedAt = DateTimeOffset.UtcNow;
     }

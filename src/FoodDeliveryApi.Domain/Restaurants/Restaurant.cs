@@ -16,6 +16,8 @@ public class Restaurant : IHasDomainEvents
     public int EtaMinutes { get; private set; }
     public decimal DistanceKm { get; private set; }
     public string City { get; private set; } = string.Empty;
+    public string Email { get; private set; } = string.Empty;
+    public string Mobile { get; private set; } = string.Empty;
     public bool IsOpenNow { get; private set; }
     public string Icon { get; private set; } = string.Empty;
     public string PrimaryColor { get; private set; } = string.Empty;
@@ -42,6 +44,8 @@ public class Restaurant : IHasDomainEvents
         string city,
         int etaMinutes,
         decimal distanceKm,
+        string email = "",
+        string mobile = "",
         string icon = "",
         string primaryColor = "",
         List<string>? images = null,
@@ -69,6 +73,8 @@ public class Restaurant : IHasDomainEvents
             TenantId = tenantId,
             Name = name,
             City = city,
+            Email = email,
+            Mobile = mobile,
             EtaMinutes = etaMinutes,
             DistanceKm = distanceKm,
             Icon = icon,
@@ -89,6 +95,8 @@ public class Restaurant : IHasDomainEvents
         string city,
         int etaMinutes,
         decimal distanceKm,
+        string email = "",
+        string mobile = "",
         string icon = "",
         string primaryColor = "",
         List<string>? images = null,
@@ -117,6 +125,8 @@ public class Restaurant : IHasDomainEvents
             ExternalId = externalId,
             Name = name,
             City = city,
+            Email = email,
+            Mobile = mobile,
             EtaMinutes = etaMinutes,
             DistanceKm = distanceKm,
             Icon = icon,
@@ -140,7 +150,7 @@ public class Restaurant : IHasDomainEvents
     }
 
     // Behaviors
-    public void UpdateBasicInfo(string name, string city, int etaMinutes, decimal distanceKm)
+    public void UpdateBasicInfo(string name, string city, int etaMinutes, decimal distanceKm, string email = "", string mobile = "")
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name cannot be null or empty", nameof(name));
@@ -156,6 +166,8 @@ public class Restaurant : IHasDomainEvents
 
         Name = name;
         City = city;
+        Email = email ?? string.Empty;
+        Mobile = mobile ?? string.Empty;
         EtaMinutes = etaMinutes;
         DistanceKm = distanceKm;
         UpdatedAt = DateTimeOffset.UtcNow;

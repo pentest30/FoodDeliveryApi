@@ -116,10 +116,10 @@ public class IntegrationTestBase : IClassFixture<WebApplicationFactory<Program>>
         var restaurants = new[]
         {
             Restaurant.Create(
-                "rest-001", TestTenantId, "Pizza Palace", "New York", 25, 2.5m, "🍕", "#FF6B6B", new List<string> { "https://example.com/pizza1.jpg" }
+                "rest-001", TestTenantId, "Pizza Palace", "New York", 25, 2.5m, "pizza@palace.com", "+1234567890", "🍕", "#FF6B6B", new List<string> { "https://example.com/pizza1.jpg" }
             ),
             Restaurant.Create(
-                "rest-002", TestTenantId, "Burger King", "Los Angeles", 20, 1.8m, "🍔", "#4ECDC4", new List<string> { "https://example.com/burger1.jpg" }
+                "rest-002", TestTenantId, "Burger King", "Los Angeles", 20, 1.8m, "burger@king.com", "+1987654321", "🍔", "#4ECDC4", new List<string> { "https://example.com/burger1.jpg" }
             )
         };
         Context.Restaurants.AddRange(restaurants);

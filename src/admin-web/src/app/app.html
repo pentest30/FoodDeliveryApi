@@ -19,44 +19,81 @@
     <mat-nav-list class="nav-list">
       <!-- Home Section -->
       <div class="nav-section">
-        <div class="section-header">
+        <div class="section-header" (click)="toggleSection('home')">
           <mat-icon class="section-icon">home</mat-icon>
-          <span class="section-title">{{ 'home' | translate }}</span>
+          <span class="section-title">{{ 'nav.home' | translate }}</span>
+          <mat-icon class="expand-icon" [class.rotated]="expandedSections().home">
+            expand_more
+          </mat-icon>
         </div>
-        @for (item of sidenavItems[0].items; track item.path) {
-          <a mat-list-item 
-             [routerLink]="item.path" 
-             routerLinkActive="active-nav-item"
-             [matTooltip]="item.label | translate"
-             matTooltipPosition="right"
-             class="nav-item">
-            <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
-            <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
-            <div class="nav-indicator"></div>
-          </a>
-        }
+        <div class="section-content" [class.expanded]="expandedSections().home">
+          @for (item of sidenavItems[0].items; track item.path) {
+            <a mat-list-item 
+               [routerLink]="item.path" 
+               routerLinkActive="active-nav-item"
+               [matTooltip]="item.label | translate"
+               matTooltipPosition="right"
+               class="nav-item">
+              <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
+              <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
+              <div class="nav-indicator"></div>
+            </a>
+          }
+        </div>
+      </div>
+
+      <mat-divider class="nav-divider"></mat-divider>
+
+      <!-- Restaurants Section -->
+      <div class="nav-section">
+        <div class="section-header" (click)="toggleSection('restaurants')">
+          <mat-icon class="section-icon">restaurant</mat-icon>
+          <span class="section-title">{{ 'nav.restaurants' | translate }}</span>
+          <mat-icon class="expand-icon" [class.rotated]="expandedSections().restaurants">
+            expand_more
+          </mat-icon>
+        </div>
+        <div class="section-content" [class.expanded]="expandedSections().restaurants">
+          @for (item of sidenavItems[1].items; track item.path) {
+            <a mat-list-item 
+               [routerLink]="item.path" 
+               routerLinkActive="active-nav-item"
+               [matTooltip]="item.label | translate"
+               matTooltipPosition="right"
+               class="nav-item">
+              <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
+              <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
+              <div class="nav-indicator"></div>
+            </a>
+          }
+        </div>
       </div>
 
       <mat-divider class="nav-divider"></mat-divider>
 
       <!-- Resources Section -->
       <div class="nav-section">
-        <div class="section-header">
+        <div class="section-header" (click)="toggleSection('resources')">
           <mat-icon class="section-icon">widgets</mat-icon>
-          <span class="section-title">{{ 'resources' | translate }}</span>
+          <span class="section-title">{{ 'nav.resources' | translate }}</span>
+          <mat-icon class="expand-icon" [class.rotated]="expandedSections().resources">
+            expand_more
+          </mat-icon>
         </div>
-        @for (item of sidenavItems[1].items; track item.path) {
-          <a mat-list-item 
-             [routerLink]="item.path" 
-             routerLinkActive="active-nav-item"
-             [matTooltip]="item.label | translate"
-             matTooltipPosition="right"
-             class="nav-item">
-            <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
-            <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
-            <div class="nav-indicator"></div>
-          </a>
-        }
+        <div class="section-content" [class.expanded]="expandedSections().resources">
+          @for (item of sidenavItems[2].items; track item.path) {
+            <a mat-list-item 
+               [routerLink]="item.path" 
+               routerLinkActive="active-nav-item"
+               [matTooltip]="item.label | translate"
+               matTooltipPosition="right"
+               class="nav-item">
+              <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
+              <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
+              <div class="nav-indicator"></div>
+            </a>
+          }
+        </div>
       </div>
 
       <mat-divider class="nav-divider"></mat-divider>
@@ -65,11 +102,11 @@
       <a mat-list-item 
          [routerLink]="'/about'" 
          routerLinkActive="active-nav-item" 
-         [matTooltip]="'about' | translate" 
+         [matTooltip]="'nav.about' | translate" 
          matTooltipPosition="right"
          class="nav-item">
         <mat-icon matListItemIcon class="nav-icon">info</mat-icon>
-        <span matListItemTitle class="nav-text">{{ 'about' | translate }}</span>
+        <span matListItemTitle class="nav-text">{{ 'nav.about' | translate }}</span>
         <div class="nav-indicator"></div>
       </a>
 
@@ -119,6 +156,9 @@
       </div>
 
       <div class="toolbar-right">
+        <!-- Theme Toggle -->
+        <app-theme-toggle></app-theme-toggle>
+
         <!-- Language Switcher -->
         <button mat-icon-button [matMenuTriggerFor]="langMenu" [matTooltip]="'Language'" class="toolbar-button">
           <mat-icon>translate</mat-icon>
@@ -209,6 +249,9 @@
 
     <!-- Content Area -->
     <div class="content">
+      <!-- Breadcrumb Navigation -->
+      <app-breadcrumb></app-breadcrumb>
+      
       <router-outlet></router-outlet>
     </div>
   </mat-sidenav-content>

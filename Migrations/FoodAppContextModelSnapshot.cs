@@ -232,6 +232,10 @@ namespace FoodDeliveryApi.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("EtaMinutes")
                         .HasColumnType("int");
 
@@ -251,6 +255,10 @@ namespace FoodDeliveryApi.Migrations
 
                     b.Property<bool>("IsOpenNow")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Mobile")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()

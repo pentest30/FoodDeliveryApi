@@ -172,3 +172,4 @@ console.log('API URL:', environment.apiUrl);
 - Production builds should use HTTPS endpoints
 - Consider using Angular's `APP_INITIALIZER` for runtime configuration loading
 
+
