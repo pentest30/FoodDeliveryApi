@@ -36,6 +36,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/stores/pages/restaurant-details/restaurant-details.component').then(m => m.RestaurantDetailsComponent),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'restaurants/:restaurantId/menu-items/new',
+    loadComponent: () => import('./features/sections/pages/menu-item-page/menu-item-page.component').then(m => m.MenuItemPageComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'restaurants/:restaurantId/menu-items/:menuItemId/edit',
+    loadComponent: () => import('./features/sections/pages/menu-item-page/menu-item-page.component').then(m => m.MenuItemPageComponent),
+    canActivate: [AuthGuard]
+  },
   { 
     path: 'account', 
     loadComponent: () => import('./pages/account/account').then(m => m.AccountPage),

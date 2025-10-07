@@ -17,6 +17,7 @@ public interface IRestaurantRepository
     Task UpdateAsync(Restaurant update, CancellationToken ct);
     Task<bool> DeleteAsync(string externalId, CancellationToken ct);
     Task<IReadOnlyList<Category>> GetCategoriesByExternalIdsAsync(List<string> externalIds, CancellationToken ct);
+    Task<RestaurantSection?> GetMenuItemByIdAsync(Guid sectionId, CancellationToken ct);
 }
 
 public interface ICategoryRepository

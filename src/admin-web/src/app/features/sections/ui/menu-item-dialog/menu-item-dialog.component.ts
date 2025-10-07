@@ -13,7 +13,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 
-import { MenuItemsService, MenuItemDto, CreateMenuItemDto, UpdateMenuItemDto } from '../../data/menu-items.service';
+import { MenuItemsService, MenuItemDto, CreateMenuItemDto, UpdateMenuItemDto, MenuItemVariantDto, CreateMenuItemVariantDto } from '../../data/menu-items.service';
 
 export interface MenuItemDialogData {
   menuItem?: MenuItemDto;
@@ -175,6 +175,134 @@ export interface MenuItemDialogData {
                     {{ allergen }}
                   </mat-chip>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Divider -->
+          <mat-divider class="section-divider"></mat-divider>
+
+          <!-- Group D: Variants (only in edit mode) -->
+          <div class="form-section" *ngIf="data.mode === 'edit'">
+            <div class="section-header">
+              <mat-icon class="section-icon">tune</mat-icon>
+              <h3 class="section-title">Menu Item Variants</h3>
+              <button mat-button color="primary" (click)="addVariant()" class="add-variant-btn">
+                <mat-icon>add</mat-icon>
+                Add Variant
+              </button>
+            </div>
+            
+            <div class="section-content">
+              <!-- Variants List -->
+              <div class="variants-list" *ngIf="variants().length > 0">
+                <div class="variant-item" *ngFor="let variant of variants()">
+                  <div class="variant-info">
+                    <div class="variant-name">{{ variant.name }}</div>
+                    <div class="variant-details">
+                      <span class="variant-price">{{ formatPrice(variant.price) }}</span>
+                      <span class="variant-size" *ngIf="variant.size">{{ variant.size }}</span>
+                      <span class="variant-sku" *ngIf="variant.sku">SKU: {{ variant.sku }}</span>
+                    </div>
+                  </div>
+                  <div class="variant-actions">
+                    <button mat-icon-button (click)="editVariant(variant)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteVariant(variant)" matTooltip="Delete" class="delete-btn">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div class="empty-variants" *ngIf="variants().length === 0">
+                <mat-icon class="empty-icon">tune</mat-icon>
+                <p>No variants added yet</p>
+                <p class="empty-description">Add size options, pricing tiers, or different configurations</p>
+              </div>
+
+              <!-- Variant Form -->
+              <div class="variant-form" *ngIf="showVariantForm()">
+                <div class="variant-form-header">
+                  <h4>{{ editingVariant ? 'Edit Variant' : 'Add New Variant' }}</h4>
+                  <button mat-icon-button (click)="cancelVariantForm()">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+                
+                <form [formGroup]="variantForm" class="variant-form-content">
+                  <div class="variant-form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Variant Name</mat-label>
+                      <input matInput formControlName="name" placeholder="e.g., Small, Large, Extra Spicy">
+                      <mat-icon matSuffix>label</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Price</mat-label>
+                      <input matInput type="number" formControlName="price" placeholder="0.00" step="0.01" min="0">
+                      <span matPrefix>$&nbsp;</span>
+                      <mat-icon matSuffix>attach_money</mat-icon>
+                    </mat-form-field>
+                  </div>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Description</mat-label>
+                    <textarea matInput formControlName="description" placeholder="Optional description for this variant"></textarea>
+                    <mat-icon matSuffix>description</mat-icon>
+                  </mat-form-field>
+
+                  <div class="variant-form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Size</mat-label>
+                      <input matInput formControlName="size" placeholder="e.g., 12oz, Large, XL">
+                      <mat-icon matSuffix>straighten</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Unit</mat-label>
+                      <input matInput formControlName="unit" placeholder="e.g., piece, cup, slice">
+                      <mat-icon matSuffix>category</mat-icon>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="variant-form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Weight (optional)</mat-label>
+                      <input matInput type="number" formControlName="weight" placeholder="0.0" step="0.1" min="0">
+                      <mat-icon matSuffix>scale</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>SKU</mat-label>
+                      <input matInput formControlName="sku" placeholder="Product SKU">
+                      <mat-icon matSuffix>qr_code</mat-icon>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="variant-form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Stock Quantity</mat-label>
+                      <input matInput type="number" formControlName="stockQuantity" placeholder="0" min="0">
+                      <mat-icon matSuffix>inventory</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Available Until</mat-label>
+                      <input matInput type="date" formControlName="availableUntil">
+                      <mat-icon matSuffix>event</mat-icon>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="variant-form-actions">
+                    <button mat-button type="button" (click)="cancelVariantForm()">Cancel</button>
+                    <button mat-raised-button color="primary" (click)="saveVariant()" [disabled]="!variantForm.valid">
+                      {{ editingVariant ? 'Update Variant' : 'Add Variant' }}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -387,6 +515,135 @@ export interface MenuItemDialogData {
       gap: 8px;
     }
 
+    /* Variant Management Styles */
+    .add-variant-btn {
+      margin-left: auto;
+    }
+
+    .variants-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .variant-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .variant-info {
+      flex: 1;
+    }
+
+    .variant-name {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .variant-details {
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .variant-price {
+      font-weight: 600;
+      color: #059669;
+    }
+
+    .variant-size {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .variant-sku {
+      font-family: monospace;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .variant-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .delete-btn {
+      color: #dc2626;
+    }
+
+    .empty-variants {
+      text-align: center;
+      padding: 32px;
+      color: #64748b;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      color: #cbd5e1;
+    }
+
+    .empty-description {
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .variant-form {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+      margin-top: 16px;
+    }
+
+    .variant-form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .variant-form-header h4 {
+      margin: 0;
+      color: #1e293b;
+    }
+
+    .variant-form-content {
+      padding: 16px;
+    }
+
+    .variant-form-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .variant-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .dialog-container {
@@ -509,8 +766,15 @@ export class MenuItemDialogComponent implements OnInit {
   allergens = signal<string[]>([]);
   sections = signal<{id: string, name: string}[]>([]);
 
+  // Variant management
+  variants = signal<MenuItemVariantDto[]>([]);
+  showVariantForm = signal(false);
+  variantForm!: FormGroup;
+  editingVariant: MenuItemVariantDto | null = null;
+
   ngOnInit() {
     this.initializeForm();
+    this.initializeVariantForm();
     this.loadExistingData();
     this.loadSections();
   }
@@ -524,6 +788,23 @@ export class MenuItemDialogComponent implements OnInit {
       basePrice: [null],
       quantity: [1, [Validators.min(1)]],
       available: [true]
+    });
+  }
+
+  private initializeVariantForm() {
+    this.variantForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      description: [''],
+      price: [0, [Validators.required, Validators.min(0)]],
+      currency: ['DZD', [Validators.required]],
+      sortOrder: [0, [Validators.min(0)]],
+      size: [''],
+      unit: [''],
+      weight: [null, [Validators.min(0)]],
+      dimensions: [''],
+      sku: [''],
+      stockQuantity: [null, [Validators.min(0)]],
+      availableUntil: ['']
     });
   }
 
@@ -618,5 +899,132 @@ export class MenuItemDialogComponent implements OnInit {
 
   protected close() {
     this.dialogRef.close();
+  }
+
+  // Variant Management Methods
+  protected addVariant() {
+    this.showVariantForm.set(true);
+    this.editingVariant = null;
+    this.variantForm.reset();
+    this.variantForm.patchValue({
+      currency: 'DZD',
+      sortOrder: this.variants().length
+    });
+  }
+
+  protected editVariant(variant: MenuItemVariantDto) {
+    this.editingVariant = variant;
+    this.showVariantForm.set(true);
+    this.variantForm.patchValue({
+      name: variant.name,
+      description: variant.description,
+      price: variant.price,
+      currency: variant.currency,
+      sortOrder: variant.sortOrder,
+      size: variant.size,
+      unit: variant.unit,
+      weight: variant.weight,
+      dimensions: variant.dimensions,
+      sku: variant.sku,
+      stockQuantity: variant.stockQuantity,
+      availableUntil: variant.availableUntil ? new Date(variant.availableUntil).toISOString().split('T')[0] : ''
+    });
+  }
+
+  protected saveVariant() {
+    if (this.variantForm.valid && this.data.menuItem) {
+      const formValue = this.variantForm.value;
+      const variantData: CreateMenuItemVariantDto = {
+        name: formValue.name,
+        description: formValue.description || '',
+        price: formValue.price,
+        currency: formValue.currency,
+        sortOrder: formValue.sortOrder,
+        size: formValue.size || '',
+        unit: formValue.unit || '',
+        weight: formValue.weight,
+        dimensions: formValue.dimensions || '',
+        sku: formValue.sku || '',
+        stockQuantity: formValue.stockQuantity,
+        availableUntil: formValue.availableUntil ? new Date(formValue.availableUntil).toISOString() : undefined
+      };
+
+      if (this.editingVariant) {
+        // Update existing variant
+        this.menuItemsService.updateMenuItemVariant(
+          this.data.menuItem.id,
+          this.editingVariant.id,
+          { ...variantData, active: true },
+          this.data.restaurantId
+        ).subscribe({
+          next: () => {
+            this.snackBar.open('Variant updated successfully', 'Close', { duration: 3000 });
+            this.cancelVariantForm();
+            this.loadVariants();
+          },
+          error: (error) => {
+            console.error('Error updating variant:', error);
+            this.snackBar.open('Error updating variant', 'Close', { duration: 3000 });
+          }
+        });
+      } else {
+        // Create new variant
+        this.menuItemsService.addMenuItemVariant(
+          this.data.menuItem.id,
+          variantData,
+          this.data.restaurantId
+        ).subscribe({
+          next: () => {
+            this.snackBar.open('Variant added successfully', 'Close', { duration: 3000 });
+            this.cancelVariantForm();
+            this.loadVariants();
+          },
+          error: (error) => {
+            console.error('Error adding variant:', error);
+            this.snackBar.open('Error adding variant', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    }
+  }
+
+  protected cancelVariantForm() {
+    this.showVariantForm.set(false);
+    this.editingVariant = null;
+    this.variantForm.reset();
+  }
+
+  protected deleteVariant(variant: MenuItemVariantDto) {
+    if (confirm(`Are you sure you want to delete the variant "${variant.name}"?`)) {
+      if (this.data.menuItem) {
+        this.menuItemsService.deleteMenuItemVariant(
+          this.data.menuItem.id,
+          variant.id,
+          this.data.restaurantId
+        ).subscribe({
+          next: () => {
+            this.snackBar.open('Variant deleted successfully', 'Close', { duration: 3000 });
+            this.loadVariants();
+          },
+          error: (error) => {
+            console.error('Error deleting variant:', error);
+            this.snackBar.open('Error deleting variant', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    }
+  }
+
+  protected loadVariants() {
+    // TODO: Implement loading variants from backend
+    // This would require a new endpoint to get variants for a menu item
+    console.log('Loading variants for menu item');
+  }
+
+  protected formatPrice(price: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'DZD'
+    }).format(price);
   }
 }

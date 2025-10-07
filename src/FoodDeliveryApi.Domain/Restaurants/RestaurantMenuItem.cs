@@ -123,6 +123,55 @@ public class RestaurantMenuItem
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
+    public void RemoveVariant(Guid variantId)
+    {
+        var variant = Variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant != null)
+        {
+            Variants.Remove(variant);
+            UpdatedAt = DateTimeOffset.UtcNow;
+        }
+    }
+
+    public void UpdateVariant(Guid variantId, string name, decimal price, string description = "", 
+        string size = "", string unit = "", decimal? weight = null, string dimensions = "", 
+        string sku = "", int? stockQuantity = null, DateTime? availableUntil = null, bool active = true)
+    {
+        var variant = Variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant == null)
+            throw new KeyNotFoundException($"Variant with ID '{variantId}' not found");
+
+        // Check for name conflicts with other variants
+        if (Variants.Any(v => v.Id != variantId && v.Name == name))
+            throw new InvalidOperationException($"Variant with name '{name}' already exists");
+
+        // Remove old variant and add updated one
+        Variants.Remove(variant);
+        var updatedVariant = MenuItemVariant.Create(
+            Id, name, price, variant.Currency, variant.SortOrder, 
+            description, size, unit, weight, dimensions, sku, stockQuantity, availableUntil);
+        
+        Variants.Add(updatedVariant);
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetVariantActive(Guid variantId, bool active)
+    {
+        var variant = Variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant == null)
+            throw new KeyNotFoundException($"Variant with ID '{variantId}' not found");
+
+        // Since variants are immutable, we need to replace it
+        var updatedVariant = MenuItemVariant.Create(
+            Id, variant.Name, variant.Price, variant.Currency, variant.SortOrder,
+            variant.Description, variant.Size, variant.Unit, variant.Weight, 
+            variant.Dimensions, variant.SKU, variant.StockQuantity, variant.AvailableUntil);
+        
+        Variants.Remove(variant);
+        Variants.Add(updatedVariant);
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
     public void AddImage(string imageUrl)
     {
         if (string.IsNullOrWhiteSpace(imageUrl))
@@ -162,6 +211,38 @@ public class RestaurantMenuItem
     {
         var basePrice = BasePrice ?? 0m;
         return basePrice * Quantity;
+    }
+
+    public decimal GetMinVariantPrice()
+    {
+        if (!Variants.Any(v => v.Active))
+            return BasePrice ?? 0m;
+        
+        return Variants.Where(v => v.Active).Min(v => v.Price);
+    }
+
+    public decimal GetMaxVariantPrice()
+    {
+        if (!Variants.Any(v => v.Active))
+            return BasePrice ?? 0m;
+        
+        return Variants.Where(v => v.Active).Max(v => v.Price);
+    }
+
+    public bool HasVariants => Variants.Any(v => v.Active);
+
+    public string GetPriceRange()
+    {
+        if (!HasVariants)
+            return BasePrice?.ToString("C") ?? "N/A";
+        
+        var minPrice = GetMinVariantPrice();
+        var maxPrice = GetMaxVariantPrice();
+        
+        if (minPrice == maxPrice)
+            return minPrice.ToString("C");
+        
+        return $"{minPrice:C} - {maxPrice:C}";
     }
 
     public void SetRestaurantId(Guid restaurantId)

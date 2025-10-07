@@ -189,15 +189,6 @@ import { MenuItemsListComponent } from '../../../sections/pages/menu-items-list/
             </div>
           </mat-tab>
           
-          <mat-tab label="Prix/Variants">
-            <div class="tab-content">
-              <div class="variants-content">
-                <h3>Price Variants</h3>
-                <p>Price variants management will be implemented here.</p>
-              </div>
-            </div>
-          </mat-tab>
-          
           <mat-tab label="Discounts">
             <div class="tab-content">
               <div class="discounts-content">

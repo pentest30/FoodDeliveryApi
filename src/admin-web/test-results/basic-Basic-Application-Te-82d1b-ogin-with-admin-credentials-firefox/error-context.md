@@ -1,0 +1,63 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e11]:
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - img [ref=e14]: restaurant
+      - generic [ref=e15]: FoodAdmin
+    - heading "Welcome Back" [level=1] [ref=e16]
+    - paragraph [ref=e17]: Sign in to your account to continue
+  - generic [ref=e20]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]: Email Address
+        - generic [ref=e26]: "*"
+      - img [ref=e28]: email
+      - textbox "Email Address" [ref=e30]: admin@fooddelivery.com
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - generic [ref=e36]: Password
+        - generic [ref=e37]: "*"
+      - img [ref=e39]: lock
+      - textbox "Password" [ref=e41]: Admin@123
+      - button "Hide password" [pressed] [ref=e43] [cursor=pointer]:
+        - img [ref=e44] [cursor=pointer]: visibility_off
+    - generic [ref=e48]:
+      - generic [ref=e50]:
+        - generic [ref=e51] [cursor=pointer]:
+          - checkbox "Remember me" [ref=e53] [cursor=pointer]
+          - generic:
+            - img
+        - generic [ref=e54] [cursor=pointer]: Remember me
+      - link "Forgot password?" [ref=e55] [cursor=pointer]:
+        - /url: "#"
+    - button "Signing in..." [disabled]:
+      - generic:
+        - generic:
+          - progressbar:
+            - generic:
+              - img
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - img
+                - generic:
+                  - img
+          - text: Signing in...
+  - generic [ref=e56]:
+    - generic [ref=e57]:
+      - heading "Demo Credentials" [level=3] [ref=e58]
+      - generic [ref=e59]:
+        - strong [ref=e60]: "Admin:"
+        - text: admin@fooddelivery.com / Admin@123
+      - generic [ref=e61]:
+        - strong [ref=e62]: "Customer:"
+        - text: customer@fooddelivery.com / Customer@123
+    - paragraph [ref=e63]:
+      - text: Don't have an account?
+      - link "Sign up here" [ref=e64] [cursor=pointer]:
+        - /url: "#"
+```

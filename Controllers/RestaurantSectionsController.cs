@@ -248,6 +248,60 @@ public class RestaurantSectionsController : ControllerBase
         }
     }
 
+    [HttpGet("menu-items/{menuItemId}")]
+    public async Task<ActionResult<RestaurantMenuItemDto>> GetMenuItem(Guid menuItemId, CancellationToken ct)
+    {
+        try
+        {
+            var menuItem = await _sectionService.GetMenuItemByIdAsync(null, menuItemId, ct);
+            
+            var menuItemDto = new RestaurantMenuItemDto
+            {
+                Id = menuItem.Id,
+                RestaurantSectionId = menuItem.RestaurantSectionId,
+                Name = menuItem.Name,
+                Description = menuItem.Description,
+                BasePrice = menuItem.BasePrice,
+                Quantity = menuItem.Quantity,
+                Available = menuItem.Available,
+                Images = menuItem.Images,
+                Allergens = menuItem.Allergens,
+                CreatedAt = menuItem.CreatedAt,
+                UpdatedAt = menuItem.UpdatedAt,
+                // Include variants if available
+                Variants = menuItem.Variants?.Select(v => new MenuItemVariantDto
+                {
+                    Id = v.Id,
+                    MenuItemId = v.MenuItemId,
+                    Name = v.Name,
+                    Description = v.Description,
+                    Price = v.Price,
+                    Currency = v.Currency,
+                    SortOrder = v.SortOrder,
+                    Active = v.Active,
+                    Size = v.Size,
+                    Unit = v.Unit,
+                    Weight = v.Weight,
+                    Dimensions = v.Dimensions,
+                    SKU = v.SKU,
+                    StockQuantity = v.StockQuantity,
+                    AvailableUntil = v.AvailableUntil,
+                    CreatedAt = v.CreatedAt
+                }).ToList() ?? new List<MenuItemVariantDto>(),
+                HasVariants = menuItem.Variants?.Any() ?? false,
+                MinPrice = menuItem.GetMinVariantPrice(),
+                MaxPrice = menuItem.GetMaxVariantPrice(),
+                PriceRange = menuItem.GetPriceRange()
+            };
+
+            return Ok(menuItemDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("{sectionId}/menu-items")]
     public async Task<ActionResult> AddMenuItem(Guid sectionId, [FromBody] CreateMenuItemDto dto, CancellationToken ct)
     {
@@ -278,7 +332,7 @@ public class RestaurantSectionsController : ControllerBase
 
     [HttpDelete("{sectionId}/menu-items/{menuItemId}")]
     public async Task<ActionResult> RemoveMenuItem(
-        string restaurantId, Guid sectionId, Guid menuItemId, CancellationToken ct)
+        [FromQuery] string restaurantId, Guid sectionId, Guid menuItemId, CancellationToken ct)
     {
         try
         {
@@ -357,7 +411,7 @@ public class RestaurantSectionsController : ControllerBase
     // Menu Item Image Management Endpoints
     [HttpPost("{sectionId}/menu-items/{menuItemId}/images")]
     public async Task<ActionResult<ImageUploadResult>> UploadMenuItemImage(
-        string restaurantId, Guid sectionId, Guid menuItemId, IFormFile file, CancellationToken ct)
+        [FromQuery] string restaurantId, Guid sectionId, Guid menuItemId, IFormFile file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No file uploaded" });
@@ -394,7 +448,7 @@ public class RestaurantSectionsController : ControllerBase
 
     [HttpDelete("{sectionId}/menu-items/{menuItemId}/images")]
     public async Task<IActionResult> DeleteMenuItemImage(
-        string restaurantId, Guid sectionId, Guid menuItemId, [FromBody] DeleteImageRequest request, CancellationToken ct)
+        [FromQuery] string restaurantId, Guid sectionId, Guid menuItemId, [FromBody] DeleteImageRequest request, CancellationToken ct)
     {
         try
         {
@@ -415,6 +469,281 @@ public class RestaurantSectionsController : ControllerBase
             return StatusCode(500, new { message = $"Error deleting image: {ex.Message}" });
         }
     }
+
+    // Menu Item Variant Management Endpoints
+    [HttpGet("menu-items/{menuItemId}/variants")]
+    public async Task<ActionResult<List<MenuItemVariantDto>>> GetMenuItemVariants(
+        [FromQuery] string restaurantId, Guid menuItemId, CancellationToken ct)
+    {
+        try
+        {
+            // Find the menu item first to get its section
+            var menuItem = await _sectionService.GetMenuItemByIdAsync(null, menuItemId, ct);
+            var sectionId = menuItem.RestaurantSectionId;
+            
+            var variants = await _sectionService.GetMenuItemVariantsAsync(sectionId, menuItemId, ct);
+            
+            var variantDtos = variants.Select(v => new MenuItemVariantDto
+            {
+                Id = v.Id,
+                MenuItemId = v.MenuItemId,
+                Name = v.Name,
+                Description = v.Description,
+                Price = v.Price,
+                Currency = v.Currency,
+                SortOrder = v.SortOrder,
+                Active = v.Active,
+                Size = v.Size,
+                Unit = v.Unit,
+                Weight = v.Weight,
+                Dimensions = v.Dimensions,
+                SKU = v.SKU,
+                StockQuantity = v.StockQuantity,
+                AvailableUntil = v.AvailableUntil,
+                CreatedAt = v.CreatedAt
+            }).ToList();
+
+            return Ok(variantDtos);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error fetching variants: {ex.Message}" });
+        }
+    }
+
+    [HttpPost("menu-items/{menuItemId}/variants")]
+    public async Task<ActionResult<MenuItemVariantDto>> AddMenuItemVariant(
+        [FromQuery] string restaurantId, Guid menuItemId, [FromBody] CreateMenuItemVariantDto dto, CancellationToken ct)
+    {
+        try
+        {
+            // Find the menu item first to get its section
+            var menuItem = await _sectionService.GetMenuItemByIdAsync(null, menuItemId, ct);
+            var sectionId = menuItem.RestaurantSectionId;
+            
+            var variant = await _sectionService.AddMenuItemVariantAsync(
+                sectionId, menuItemId, dto.Name, dto.Price, dto.Currency, dto.SortOrder,
+                dto.Description, dto.Size, dto.Unit, dto.Weight, dto.Dimensions,
+                dto.SKU, dto.StockQuantity, dto.AvailableUntil, ct);
+
+            var variantDto = new MenuItemVariantDto
+            {
+                Id = variant.Id,
+                MenuItemId = variant.MenuItemId,
+                Name = variant.Name,
+                Description = variant.Description,
+                Price = variant.Price,
+                Currency = variant.Currency,
+                SortOrder = variant.SortOrder,
+                Active = variant.Active,
+                Size = variant.Size,
+                Unit = variant.Unit,
+                Weight = variant.Weight,
+                Dimensions = variant.Dimensions,
+                SKU = variant.SKU,
+                StockQuantity = variant.StockQuantity,
+                AvailableUntil = variant.AvailableUntil,
+                CreatedAt = variant.CreatedAt
+            };
+
+            return Ok(variantDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error adding variant: {ex.Message}" });
+        }
+    }
+
+    [HttpPost("{sectionId}/menu-items/{menuItemId}/variants")]
+    public async Task<ActionResult<MenuItemVariantDto>> AddMenuItemVariantWithSection(
+        [FromQuery] string restaurantId, Guid sectionId, Guid menuItemId, [FromBody] CreateMenuItemVariantDto dto, CancellationToken ct)
+    {
+        try
+        {
+            var variant = await _sectionService.AddMenuItemVariantAsync(
+                sectionId, menuItemId, dto.Name, dto.Price, dto.Currency, dto.SortOrder,
+                dto.Description, dto.Size, dto.Unit, dto.Weight, dto.Dimensions,
+                dto.SKU, dto.StockQuantity, dto.AvailableUntil, ct);
+
+            var variantDto = new MenuItemVariantDto
+            {
+                Id = variant.Id,
+                MenuItemId = variant.MenuItemId,
+                Name = variant.Name,
+                Description = variant.Description,
+                Price = variant.Price,
+                Currency = variant.Currency,
+                SortOrder = variant.SortOrder,
+                Active = variant.Active,
+                Size = variant.Size,
+                Unit = variant.Unit,
+                Weight = variant.Weight,
+                Dimensions = variant.Dimensions,
+                SKU = variant.SKU,
+                StockQuantity = variant.StockQuantity,
+                AvailableUntil = variant.AvailableUntil,
+                CreatedAt = variant.CreatedAt
+            };
+
+            return Ok(variantDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error adding variant: {ex.Message}" });
+        }
+    }
+
+    [HttpPut("menu-items/{menuItemId}/variants/{variantId}")]
+    public async Task<ActionResult<MenuItemVariantDto>> UpdateMenuItemVariant(
+        [FromQuery] string restaurantId, Guid menuItemId, Guid variantId, [FromBody] UpdateMenuItemVariantDto dto, CancellationToken ct)
+    {
+        try
+        {
+            // Find the menu item first to get its section
+            var menuItem = await _sectionService.GetMenuItemByIdAsync(null, menuItemId, ct);
+            var sectionId = menuItem.RestaurantSectionId;
+            
+            var variant = await _sectionService.UpdateMenuItemVariantAsync(
+                sectionId, menuItemId, variantId, dto.Name, dto.Price, dto.Description,
+                dto.Size, dto.Unit, dto.Weight, dto.Dimensions, dto.SKU, 
+                dto.StockQuantity, dto.AvailableUntil, dto.Active, ct);
+
+            var variantDto = new MenuItemVariantDto
+            {
+                Id = variant.Id,
+                MenuItemId = variant.MenuItemId,
+                Name = variant.Name,
+                Description = variant.Description,
+                Price = variant.Price,
+                Currency = variant.Currency,
+                SortOrder = variant.SortOrder,
+                Active = variant.Active,
+                Size = variant.Size,
+                Unit = variant.Unit,
+                Weight = variant.Weight,
+                Dimensions = variant.Dimensions,
+                SKU = variant.SKU,
+                StockQuantity = variant.StockQuantity,
+                AvailableUntil = variant.AvailableUntil,
+                CreatedAt = variant.CreatedAt
+            };
+
+            return Ok(variantDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error updating variant: {ex.Message}" });
+        }
+    }
+
+    [HttpPut("{sectionId}/menu-items/{menuItemId}/variants/{variantId}")]
+    public async Task<ActionResult<MenuItemVariantDto>> UpdateMenuItemVariantWithSection(
+        [FromQuery] string restaurantId, Guid sectionId, Guid menuItemId, Guid variantId, [FromBody] UpdateMenuItemVariantDto dto, CancellationToken ct)
+    {
+        try
+        {
+            var variant = await _sectionService.UpdateMenuItemVariantAsync(
+                sectionId, menuItemId, variantId, dto.Name, dto.Price, dto.Description,
+                dto.Size, dto.Unit, dto.Weight, dto.Dimensions, dto.SKU,
+                dto.StockQuantity, dto.AvailableUntil, dto.Active, ct);
+
+            var variantDto = new MenuItemVariantDto
+            {
+                Id = variant.Id,
+                MenuItemId = variant.MenuItemId,
+                Name = variant.Name,
+                Description = variant.Description,
+                Price = variant.Price,
+                Currency = variant.Currency,
+                SortOrder = variant.SortOrder,
+                Active = variant.Active,
+                Size = variant.Size,
+                Unit = variant.Unit,
+                Weight = variant.Weight,
+                Dimensions = variant.Dimensions,
+                SKU = variant.SKU,
+                StockQuantity = variant.StockQuantity,
+                AvailableUntil = variant.AvailableUntil,
+                CreatedAt = variant.CreatedAt
+            };
+
+            return Ok(variantDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error updating variant: {ex.Message}" });
+        }
+    }
+
+    [HttpDelete("menu-items/{menuItemId}/variants/{variantId}")]
+    public async Task<IActionResult> DeleteMenuItemVariant(
+        [FromQuery] string restaurantId, Guid menuItemId, Guid variantId, CancellationToken ct)
+    {
+        try
+        {
+            // Find the menu item first to get its section
+            var menuItem = await _sectionService.GetMenuItemByIdAsync(null, menuItemId, ct);
+            var sectionId = menuItem.RestaurantSectionId;
+            
+            await _sectionService.RemoveMenuItemVariantAsync(sectionId, menuItemId, variantId, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error deleting variant: {ex.Message}" });
+        }
+    }
+
+    [HttpDelete("{sectionId}/menu-items/{menuItemId}/variants/{variantId}")]
+    public async Task<IActionResult> DeleteMenuItemVariantWithSection(
+        [FromQuery] string restaurantId, Guid sectionId, Guid menuItemId, Guid variantId, CancellationToken ct)
+    {
+        try
+        {
+            await _sectionService.RemoveMenuItemVariantAsync(sectionId, menuItemId, variantId, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error deleting variant: {ex.Message}" });
+        }
+    }
 }
 
 public class CreateMenuItemDto
@@ -428,7 +757,39 @@ public class CreateMenuItemDto
     public List<string> Allergens { get; set; } = new();
 }
 
-public class DeleteImageRequest
+    public class DeleteImageRequest
+    {
+        public string ImageUrl { get; set; } = string.Empty;
+    }
+
+
+public class CreateMenuItemVariantDto
 {
-    public string ImageUrl { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string Currency { get; set; } = "DZD";
+    public int SortOrder { get; set; } = 0;
+    public string Size { get; set; } = string.Empty;
+    public string Unit { get; set; } = string.Empty;
+    public decimal? Weight { get; set; }
+    public string Dimensions { get; set; } = string.Empty;
+    public string SKU { get; set; } = string.Empty;
+    public int? StockQuantity { get; set; }
+    public DateTime? AvailableUntil { get; set; }
+}
+
+public class UpdateMenuItemVariantDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string Size { get; set; } = string.Empty;
+    public string Unit { get; set; } = string.Empty;
+    public decimal? Weight { get; set; }
+    public string Dimensions { get; set; } = string.Empty;
+    public string SKU { get; set; } = string.Empty;
+    public int? StockQuantity { get; set; }
+    public DateTime? AvailableUntil { get; set; }
+    public bool Active { get; set; } = true;
 }

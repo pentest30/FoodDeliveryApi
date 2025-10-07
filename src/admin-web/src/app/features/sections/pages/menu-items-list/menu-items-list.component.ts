@@ -24,7 +24,7 @@ import { debounceTime, distinctUntilChanged, startWith, switchMap, catchError, m
 import { of, combineLatest, Observable } from 'rxjs';
 
 import { MenuItemsService, MenuItemDto, MenuItemListParams } from '../../data/menu-items.service';
-import { MenuItemDialogComponent, MenuItemDialogData } from '../../ui/menu-item-dialog/menu-item-dialog.component';
+import { MenuItemDialogComponent } from '../../ui/menu-item-dialog/menu-item-dialog.component';
 import { ImageUploadDialogComponent } from '../../../../shared/components/image-upload-dialog/image-upload-dialog.component';
 
 @Component({
@@ -51,7 +51,8 @@ import { ImageUploadDialogComponent } from '../../../../shared/components/image-
     MatDialogModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    TranslateModule
+    TranslateModule,
+    MenuItemDialogComponent
   ],
   template: `
     <div class="menu-items-container">
@@ -127,10 +128,19 @@ import { ImageUploadDialogComponent } from '../../../../shared/components/image-
               </ng-container>
 
               <!-- Price Column -->
-              <ng-container matColumnDef="price">
+              <ng-container matColumnDef="priceRange">
                 <th mat-header-cell *matHeaderCellDef>PRICE</th>
                 <td mat-cell *matCellDef="let item">
-                  <span class="item-price">{{ formatPrice(item.basePrice) }}</span>
+                  <div class="price-display">
+                    <span class="item-price" *ngIf="!item.hasVariants">{{ formatPrice(item.basePrice) }}</span>
+                    <div class="price-range" *ngIf="item.hasVariants">
+                      <span class="price-range-text">{{ item.priceRange || 'From ' + formatPrice(item.minPrice) }}</span>
+                      <span class="variant-indicator" *ngIf="item.variants && item.variants.length > 0">
+                        <mat-icon class="variant-icon">tune</mat-icon>
+                        {{ item.variants.length }} variant{{ item.variants.length > 1 ? 's' : '' }}
+                      </span>
+                    </div>
+                  </div>
                 </td>
               </ng-container>
 
@@ -167,6 +177,28 @@ import { ImageUploadDialogComponent } from '../../../../shared/components/image-
                     class="status-chip">
                     {{ getStatusText(item.available) }}
                   </mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Variants Column -->
+              <ng-container matColumnDef="variants">
+                <th mat-header-cell *matHeaderCellDef>VARIANTS</th>
+                <td mat-cell *matCellDef="let item">
+                  <div class="variants-cell">
+                    <span *ngIf="!item.hasVariants || !item.variants || item.variants.length === 0" class="no-variants">
+                      <mat-icon>tune</mat-icon>
+                      No variants
+                    </span>
+                    <div *ngIf="item.hasVariants && item.variants && item.variants.length > 0" class="has-variants">
+                      <span class="variant-count">
+                        <mat-icon>tune</mat-icon>
+                        {{ item.variants.length }} variant{{ item.variants.length > 1 ? 's' : '' }}
+                      </span>
+                      <button mat-icon-button (click)="manageVariants(item)" class="manage-variants-btn" matTooltip="Manage Variants">
+                        <mat-icon>settings</mat-icon>
+                      </button>
+                    </div>
+                  </div>
                 </td>
               </ng-container>
 
@@ -209,35 +241,39 @@ import { ImageUploadDialogComponent } from '../../../../shared/components/image-
         </div>
       </mat-card>
 
-      <!-- Context Menu -->
-      <mat-menu #actionsMenu="matMenu" class="actions-context-menu">
-        <button mat-menu-item (click)="editMenuItem(selectedItem)" *ngIf="selectedItem">
-          <mat-icon>edit</mat-icon>
-          <span>Edit Menu Item</span>
-        </button>
-        <button mat-menu-item (click)="duplicateMenuItem(selectedItem)" *ngIf="selectedItem">
-          <mat-icon>content_copy</mat-icon>
-          <span>Duplicate</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button mat-menu-item (click)="openImageUpload(selectedItem)" *ngIf="selectedItem">
-          <mat-icon>add_photo_alternate</mat-icon>
-          <span>Upload Images</span>
-        </button>
-        <button mat-menu-item (click)="viewImages(selectedItem)" *ngIf="selectedItem && selectedItem.images && selectedItem.images.length > 0">
-          <mat-icon>photo_library</mat-icon>
-          <span>View All Images</span>
-        </button>
-        <button mat-menu-item (click)="removeAllImages(selectedItem)" *ngIf="selectedItem && selectedItem.images && selectedItem.images.length > 0">
-          <mat-icon>delete_sweep</mat-icon>
-          <span>Remove All Images</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button mat-menu-item (click)="deleteMenuItem(selectedItem)" *ngIf="selectedItem" class="delete-action">
-          <mat-icon>delete</mat-icon>
-          <span>Delete</span>
-        </button>
-      </mat-menu>
+            <!-- Context Menu -->
+            <mat-menu #actionsMenu="matMenu" class="actions-context-menu">
+              <button mat-menu-item (click)="editMenuItem(selectedItem)" *ngIf="selectedItem">
+                <mat-icon>edit</mat-icon>
+                <span>Edit Menu Item</span>
+              </button>
+              <button mat-menu-item (click)="manageVariants(selectedItem)" *ngIf="selectedItem">
+                <mat-icon>tune</mat-icon>
+                <span>Manage Variants</span>
+              </button>
+              <button mat-menu-item (click)="duplicateMenuItem(selectedItem)" *ngIf="selectedItem">
+                <mat-icon>content_copy</mat-icon>
+                <span>Duplicate</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="openImageUpload(selectedItem)" *ngIf="selectedItem">
+                <mat-icon>add_photo_alternate</mat-icon>
+                <span>Upload Images</span>
+              </button>
+              <button mat-menu-item (click)="viewImages(selectedItem)" *ngIf="selectedItem && selectedItem.images && selectedItem.images.length > 0">
+                <mat-icon>photo_library</mat-icon>
+                <span>View All Images</span>
+              </button>
+              <button mat-menu-item (click)="removeAllImages(selectedItem)" *ngIf="selectedItem && selectedItem.images && selectedItem.images.length > 0">
+                <mat-icon>delete_sweep</mat-icon>
+                <span>Remove All Images</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="deleteMenuItem(selectedItem)" *ngIf="selectedItem" class="delete-action">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
     </div>
   `,
   styles: [`
@@ -389,6 +425,84 @@ import { ImageUploadDialogComponent } from '../../../../shared/components/image-
       color: #059669;
       font-weight: 600;
       font-size: 16px;
+    }
+
+    .price-display {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .price-range {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .price-range-text {
+      font-weight: 600;
+      color: #059669;
+      font-size: 14px;
+    }
+
+    .variant-indicator {
+      font-size: 12px;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 12px;
+      align-self: flex-start;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .variant-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Variants Column Styles */
+    .variants-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .no-variants {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .has-variants {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .variant-count {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #059669;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .manage-variants-btn {
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      color: #3b82f6;
+    }
+
+    .manage-variants-btn:hover {
+      background: #eff6ff;
+      color: #1d4ed8;
     }
 
     .item-quantity {
@@ -596,7 +710,7 @@ export class MenuItemsListComponent implements OnInit {
   pageIndex = signal(0);
 
   // Table configuration
-  displayedColumns = ['name', 'description', 'price', 'quantity', 'allergens', 'status', 'created', 'actions'];
+  displayedColumns = ['name', 'description', 'priceRange', 'quantity', 'allergens', 'status', 'variants', 'created', 'actions'];
 
   // Selected item for context menus
   selectedItem: MenuItemDto | null = null;
@@ -664,45 +778,11 @@ export class MenuItemsListComponent implements OnInit {
   }
 
   protected createMenuItem() {
-    const dialogData: MenuItemDialogData = {
-      mode: 'create',
-      restaurantId: this.restaurantId
-    };
-
-    const dialogRef = this.dialog.open(MenuItemDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      data: dialogData,
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loadMenuItems().subscribe();
-        this.snackBar.open('Menu item created successfully', 'Close', { duration: 3000 });
-      }
-    });
+    this.router.navigate(['/restaurants', this.restaurantId, 'menu-items', 'new']);
   }
 
   protected editMenuItem(menuItem: MenuItemDto) {
-    const dialogData: MenuItemDialogData = {
-      menuItem: menuItem,
-      mode: 'edit'
-    };
-
-    const dialogRef = this.dialog.open(MenuItemDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      data: dialogData,
-      disableClose: true
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loadMenuItems().subscribe();
-        this.snackBar.open('Menu item updated successfully', 'Close', { duration: 3000 });
-      }
-    });
+    this.router.navigate(['/restaurants', this.restaurantId, 'menu-items', menuItem.id, 'edit']);
   }
 
   protected deleteMenuItem(menuItem: MenuItemDto) {
@@ -795,5 +875,9 @@ export class MenuItemsListComponent implements OnInit {
   protected duplicateMenuItem(menuItem: MenuItemDto) {
     // TODO: Implement duplicate functionality
     this.snackBar.open('Duplicate functionality not implemented yet', 'Close', { duration: 3000 });
+  }
+
+  protected manageVariants(menuItem: MenuItemDto) {
+    this.router.navigate(['/restaurants', this.restaurantId, 'menu-items', menuItem.id, 'edit']);
   }
 }

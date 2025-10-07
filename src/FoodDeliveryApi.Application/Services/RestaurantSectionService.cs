@@ -310,4 +310,115 @@ public class RestaurantSectionService
 
         return allMenuItems.Count();
     }
+
+   
+    public async Task<RestaurantMenuItem> GetMenuItemByIdAsync(Guid? sectionId, Guid menuItemId, CancellationToken ct = default)
+    {
+        // More efficient: get the section directly and find the menu item
+        var section = await _repository.GetMenuItemByIdAsync(menuItemId, ct);
+        if (section == null)
+            throw new KeyNotFoundException($"Section with ID '{sectionId}' not found");
+
+        var menuItem = section.MenuItems.FirstOrDefault(mi => mi.Id == menuItemId);
+        if (menuItem == null)
+            throw new KeyNotFoundException($"Menu item with ID '{menuItemId}' not found in section '{sectionId}'");
+
+        return menuItem;
+    }
+
+    // Menu Item Variant Management Methods
+    public async Task<IReadOnlyList<MenuItemVariant>> GetMenuItemVariantsAsync(
+        Guid sectionId, Guid menuItemId, CancellationToken ct = default)
+    {
+        var section = await _repository.GetSectionByIdAsync(sectionId, ct);
+        if (section == null)
+            throw new KeyNotFoundException($"Section with ID '{sectionId}' not found");
+
+        var menuItem = section.MenuItems.FirstOrDefault(mi => mi.Id == menuItemId);
+        if (menuItem == null)
+            throw new KeyNotFoundException($"Menu item with ID '{menuItemId}' not found in section '{sectionId}'");
+
+        return menuItem.Variants.ToList();
+    }
+
+    public async Task<MenuItemVariant> AddMenuItemVariantAsync(
+        Guid sectionId, Guid menuItemId, string name, decimal price, string currency = "DZD", 
+        int sortOrder = 0, string description = "", string size = "", string unit = "", 
+        decimal? weight = null, string dimensions = "", string sku = "", 
+        int? stockQuantity = null, DateTime? availableUntil = null, CancellationToken ct = default)
+    {
+        var section = await _repository.GetSectionByIdAsync(sectionId, ct);
+        if (section == null)
+            throw new KeyNotFoundException($"Section with ID '{sectionId}' not found");
+
+        var menuItem = section.MenuItems.FirstOrDefault(mi => mi.Id == menuItemId);
+        if (menuItem == null)
+            throw new KeyNotFoundException($"Menu item with ID '{menuItemId}' not found in section '{sectionId}'");
+
+        var variant = MenuItemVariant.Create(
+            menuItemId, name, price, currency, sortOrder, description, 
+            size, unit, weight, dimensions, sku, stockQuantity, availableUntil);
+
+        menuItem.AddVariant(variant);
+
+        // Save changes
+        var restaurant = await _repository.GetByIdAsync(section.RestaurantId, ct);
+        if (restaurant != null)
+        {
+            await _repository.UpdateAsync(restaurant, ct);
+        }
+
+        return variant;
+    }
+
+    public async Task<MenuItemVariant> UpdateMenuItemVariantAsync(
+        Guid sectionId, Guid menuItemId, Guid variantId, string name, decimal price, 
+        string description = "", string size = "", string unit = "", decimal? weight = null, 
+        string dimensions = "", string sku = "", int? stockQuantity = null, 
+        DateTime? availableUntil = null, bool active = true, CancellationToken ct = default)
+    {
+        var section = await _repository.GetSectionByIdAsync(sectionId, ct);
+        if (section == null)
+            throw new KeyNotFoundException($"Section with ID '{sectionId}' not found");
+
+        var menuItem = section.MenuItems.FirstOrDefault(mi => mi.Id == menuItemId);
+        if (menuItem == null)
+            throw new KeyNotFoundException($"Menu item with ID '{menuItemId}' not found in section '{sectionId}'");
+
+        menuItem.UpdateVariant(variantId, name, price, description, size, unit, weight, 
+            dimensions, sku, stockQuantity, availableUntil, active);
+
+        // Save changes
+        var restaurant = await _repository.GetByIdAsync(section.RestaurantId, ct);
+        if (restaurant != null)
+        {
+            await _repository.UpdateAsync(restaurant, ct);
+        }
+
+        return menuItem.Variants.FirstOrDefault(v => v.Id == variantId) ?? 
+            throw new KeyNotFoundException($"Variant with ID '{variantId}' not found");
+    }
+
+    public async Task<bool> RemoveMenuItemVariantAsync(
+        Guid sectionId, Guid menuItemId, Guid variantId, CancellationToken ct = default)
+    {
+        var section = await _repository.GetSectionByIdAsync(sectionId, ct);
+        if (section == null)
+            return false;
+
+        var menuItem = section.MenuItems.FirstOrDefault(mi => mi.Id == menuItemId);
+        if (menuItem == null)
+            return false;
+
+        menuItem.RemoveVariant(variantId);
+
+        // Save changes
+        var restaurant = await _repository.GetByIdAsync(section.RestaurantId, ct);
+        if (restaurant != null)
+        {
+            await _repository.UpdateAsync(restaurant, ct);
+        }
+
+        return true;
+    }
 }

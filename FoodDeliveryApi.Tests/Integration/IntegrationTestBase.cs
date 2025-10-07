@@ -14,10 +14,10 @@ namespace FoodDeliveryApi.Tests.Integration;
 
 public class IntegrationTestBase : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
-    protected readonly WebApplicationFactory<Program> Factory;
-    protected readonly HttpClient Client;
-    protected readonly TestDbContext Context;
-    protected readonly string TestTenantId = "test-tenant-001";
+    public readonly WebApplicationFactory<Program> Factory;
+    public readonly HttpClient Client;
+    public readonly TestDbContext Context;
+    public readonly string TestTenantId = "test-tenant-001";
 
     public IntegrationTestBase(WebApplicationFactory<Program> factory)
     {

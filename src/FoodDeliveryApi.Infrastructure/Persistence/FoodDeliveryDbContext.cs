@@ -335,11 +335,24 @@ public class FoodAppContext : MultiTenantDbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.Price).HasPrecision(10, 2);
             entity.Property(e => e.Currency).HasMaxLength(3);
             entity.Property(e => e.SortOrder);
             entity.Property(e => e.Active);
             entity.Property(e => e.CreatedAt);
+            entity.Property(e => e.UpdatedAt);
+            
+            // Size and physical properties
+            entity.Property(e => e.Size).HasMaxLength(50);
+            entity.Property(e => e.Unit).HasMaxLength(20);
+            entity.Property(e => e.Weight).HasPrecision(10, 3);
+            entity.Property(e => e.Dimensions).HasMaxLength(100);
+            
+            // Business properties
+            entity.Property(e => e.SKU).HasMaxLength(50);
+            entity.Property(e => e.StockQuantity);
+            entity.Property(e => e.AvailableUntil);
         });
 
         // Configure Discount (now in Restaurant domain)

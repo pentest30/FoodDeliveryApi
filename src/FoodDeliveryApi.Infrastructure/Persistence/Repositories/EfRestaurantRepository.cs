@@ -17,7 +17,10 @@ public class EfRestaurantRepository : IRestaurantRepository
         => await _db.Restaurants.FirstOrDefaultAsync(r => r.Id == id, ct);
 
     public async Task<RestaurantSection?> GetSectionByIdAsync(Guid sectionId, CancellationToken ct)
-        => await _db.RestaurantSections.FirstOrDefaultAsync(s => s.Id == sectionId, ct);
+        => await _db.RestaurantSections 
+            .Include(r =>r.MenuItems)
+            .ThenInclude( r =>r.Variants)
+            .FirstOrDefaultAsync(s => s.Id == sectionId, ct);
 
     public async Task<IReadOnlyList<RestaurantSection>> GetSectionsByRestaurantExternalIdAsync(string externalId, CancellationToken ct)
     {
@@ -96,5 +99,14 @@ public class EfRestaurantRepository : IRestaurantRepository
         return await _db.Categories
             .Where(c => externalIds.Contains(c.ExternalId))
             .ToListAsync(ct);
+    }
+
+    public async Task<RestaurantSection?> GetMenuItemByIdAsync(Guid sectionId, CancellationToken ct)
+    {
+        return await _db.RestaurantSections
+            .Include(x => x.MenuItems)
+            .Where(r => r.MenuItems.Any(m => m.Id == sectionId))
+            .FirstOrDefaultAsync(cancellationToken: ct);
+
     }
 }

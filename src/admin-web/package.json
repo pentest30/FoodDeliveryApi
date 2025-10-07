@@ -7,6 +7,9 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "generate:api": "openapi --input swagger.json --output src/app/api --client axios"
   },
   "prettier": {

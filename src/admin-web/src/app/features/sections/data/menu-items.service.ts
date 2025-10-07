@@ -15,6 +15,12 @@ export interface MenuItemDto {
   allergens: string[];
   createdAt: string;
   updatedAt?: string;
+  // Variant information
+  variants?: MenuItemVariantDto[];
+  hasVariants?: boolean;
+  priceRange?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 export interface CreateMenuItemDto {
@@ -39,6 +45,55 @@ export interface UpdateMenuItemDto {
   allergens?: string[];
   sectionId?: string;
   restaurantId?: string;
+}
+
+// Menu Item Variant DTOs
+export interface MenuItemVariantDto {
+  id: string;
+  menuItemId: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  sortOrder: number;
+  active: boolean;
+  size: string;
+  unit: string;
+  weight?: number;
+  dimensions: string;
+  sku: string;
+  stockQuantity?: number;
+  availableUntil?: string;
+  createdAt: string;
+}
+
+export interface CreateMenuItemVariantDto {
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  sortOrder: number;
+  size: string;
+  unit: string;
+  weight?: number;
+  dimensions: string;
+  sku: string;
+  stockQuantity?: number;
+  availableUntil?: string;
+}
+
+export interface UpdateMenuItemVariantDto {
+  name: string;
+  description: string;
+  price: number;
+  size: string;
+  unit: string;
+  weight?: number;
+  dimensions: string;
+  sku: string;
+  stockQuantity?: number;
+  availableUntil?: string;
+  active: boolean;
 }
 
 export interface MenuItemListResponse {
@@ -265,6 +320,70 @@ export class MenuItemsService {
       catchError(error => {
         console.error('Error fetching sections for restaurant:', error);
         return of([]);
+      })
+    );
+  }
+
+  // Menu Item Variant Management
+  getMenuItemVariants(menuItemId: string, restaurantId?: string): Observable<MenuItemVariantDto[]> {
+    let url = `${this.baseUrl}/sections/menu-items/${menuItemId}/variants`;
+    if (restaurantId) {
+      url += `?restaurantId=${restaurantId}`;
+    }
+    return this.http.get<MenuItemVariantDto[]>(url).pipe(
+      catchError(error => {
+        console.error('Error fetching menu item variants:', error);
+        return of([]);
+      })
+    );
+  }
+
+  addMenuItemVariant(menuItemId: string, variant: CreateMenuItemVariantDto, restaurantId?: string): Observable<MenuItemVariantDto> {
+    let url = `${this.baseUrl}/sections/menu-items/${menuItemId}/variants`;
+    if (restaurantId) {
+      url += `?restaurantId=${restaurantId}`;
+    }
+    return this.http.post<MenuItemVariantDto>(url, variant).pipe(
+      catchError(error => {
+        console.error('Error adding menu item variant:', error);
+        throw error;
+      })
+    );
+  }
+
+  updateMenuItemVariant(menuItemId: string, variantId: string, variant: UpdateMenuItemVariantDto, restaurantId?: string): Observable<MenuItemVariantDto> {
+    let url = `${this.baseUrl}/sections/menu-items/${menuItemId}/variants/${variantId}`;
+    if (restaurantId) {
+      url += `?restaurantId=${restaurantId}`;
+    }
+    return this.http.put<MenuItemVariantDto>(url, variant).pipe(
+      catchError(error => {
+        console.error('Error updating menu item variant:', error);
+        throw error;
+      })
+    );
+  }
+
+  deleteMenuItemVariant(menuItemId: string, variantId: string, restaurantId?: string): Observable<void> {
+    let url = `${this.baseUrl}/sections/menu-items/${menuItemId}/variants/${variantId}`;
+    if (restaurantId) {
+      url += `?restaurantId=${restaurantId}`;
+    }
+    return this.http.delete<void>(url).pipe(
+      catchError(error => {
+        console.error('Error deleting menu item variant:', error);
+        throw error;
+      })
+    );
+  }
+
+  // Get single menu item
+  getMenuItem(menuItemId: string): Observable<MenuItemDto> {
+    const url = `${this.baseUrl}/sections/menu-items/${menuItemId}`;
+    return this.http.get<MenuItemDto>(url).pipe(
+      catchError(error => {
+        console.error('Error fetching menu item:', error);
+        throw error;
       })
     );
   }
