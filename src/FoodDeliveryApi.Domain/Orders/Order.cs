@@ -38,7 +38,6 @@ public class Order : IHasDomainEvents
     // Factory method
     public static Order Place(
         string externalId,
-        string tenantId,
         CustomerRef customer,
         Address deliveryAddress,
         IEnumerable<ValueObjects.OrderItem> items,
@@ -52,8 +51,6 @@ public class Order : IHasDomainEvents
         if (string.IsNullOrWhiteSpace(externalId))
             throw new ArgumentException("ExternalId cannot be null or empty", nameof(externalId));
         
-        if (string.IsNullOrWhiteSpace(tenantId))
-            throw new ArgumentException("TenantId cannot be null or empty", nameof(tenantId));
         
         if (customer == null)
             throw new ArgumentNullException(nameof(customer));
@@ -95,7 +92,6 @@ public class Order : IHasDomainEvents
         {
             Id = orderId,
             ExternalId = externalId,
-            TenantId = tenantId,
             Status = OrderStatus.Pending,
             CreatedAt = DateTimeOffset.UtcNow,
             EtaMinutes = etaMinutes,

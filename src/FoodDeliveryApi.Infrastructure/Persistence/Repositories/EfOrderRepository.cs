@@ -28,11 +28,17 @@ public class EfOrderRepository : IOrderRepository
         => await _db.Orders.FirstOrDefaultAsync(o => o.ExternalId == externalId);
 
     public async Task<Order?> GetByExternalIdAsync(string externalId, CancellationToken ct)
-        => await _db.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.ExternalId == externalId, ct);
+        => await _db.Orders
+            .Include(o => o.Items)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.ExternalId == externalId, ct);
 
     public async Task<(IReadOnlyList<Order> Items, int TotalCount)> SearchAsync(string? status, string? restaurantName, DateTimeOffset? from, DateTimeOffset? to, int page, int pageSize, CancellationToken ct)
     {
-        var query = _db.Orders.AsNoTracking().AsQueryable();
+        var query = _db.Orders
+            .Include(o => o.Items)
+            .AsNoTracking()
+            .AsQueryable();
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<OrderStatus>(status, out var statusEnum)) 
             query = query.Where(o => o.Status == statusEnum);
         if (!string.IsNullOrWhiteSpace(restaurantName)) query = query.Where(o => o.RestaurantName.Contains(restaurantName));

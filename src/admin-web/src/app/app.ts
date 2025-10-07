@@ -54,6 +54,7 @@ export class App implements OnInit {
   protected readonly expandedSections = signal({
     home: true,
     restaurants: true,
+    orders: true,
     resources: false
   });
 
@@ -73,6 +74,12 @@ export class App implements OnInit {
       section: 'restaurants',
       items: [
         { path: '/restaurants', icon: 'restaurant', label: 'nav.restaurants' }
+      ]
+    },
+    {
+      section: 'orders',
+      items: [
+        { path: '/orders', icon: 'receipt_long', label: 'nav.orders' }
       ]
     },
     {

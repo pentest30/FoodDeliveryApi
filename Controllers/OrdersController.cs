@@ -73,13 +73,11 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<OrderDto>> PlaceOrder([FromBody] PlaceOrderDto dto, CancellationToken ct)
+    public async Task<ActionResult<OrderDto>> PlaceOrder([FromBody] CreateOrderDto dto, CancellationToken ct)
     {
         try
         {
-            var tenantId = HttpContext.GetMultiTenantContext<Tenant>()?.TenantInfo?.Id 
-                ?? throw new InvalidOperationException("Tenant context not found");
-
+            await _placeOrderHandler.Handle(dto);
             // Create a simplified order for now - this would need proper implementation
             // based on the actual business requirements
             return BadRequest(new { message = "Order placement not yet implemented - requires proper DTO mapping and business logic" });
@@ -215,5 +213,12 @@ public class OrdersController : ControllerBase
                 Total = new MoneyApiModel { Amount = i.Total.Amount, Currency = i.Total.Currency }
             }).ToList()
         };
+    }
+
+    [HttpGet("statistics")]
+    public async Task<ActionResult<OrderStatisticsDto>> GetOrderStatistics(CancellationToken ct = default)
+    {
+        var statistics = await _orderService.GetOrderStatisticsAsync(ct);
+        return Ok(statistics);
     }
 }

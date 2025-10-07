@@ -1,7 +1,10 @@
+using FoodDeliveryApi.Api.Dtos;
 using FoodDeliveryApi.FoodDeliveryApi.Application.Commands;
 using FoodDeliveryApi.FoodDeliveryApi.Application.Interfaces;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Common;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Orders;
+using FoodDeliveryApi.FoodDeliveryApi.Domain.ValueObjects;
+using OrderItem = FoodDeliveryApi.FoodDeliveryApi.Domain.ValueObjects.OrderItem;
 
 namespace FoodDeliveryApi.FoodDeliveryApi.Application.Handlers;
 
@@ -21,7 +24,7 @@ public class PlaceOrderCommandHandler
         _eventBus = eventBus;
     }
 
-    public async Task<Guid> Handle(PlaceOrderCommand command)
+    public async Task<Guid> Handle(CreateOrderDto command)
     {
         // Debug logging
         Console.WriteLine($"Creating order with ExternalId: '{command.ExternalId}'");
@@ -29,11 +32,10 @@ public class PlaceOrderCommandHandler
         // Create order using domain factory method
         var order = Order.Place(
             command.ExternalId,
-            command.TenantId,
-            command.Customer,
-            command.DeliveryAddress,
-            command.Items,
-            command.DeliveryFee,
+            new CustomerRef()  {Name = command.Customer.Name, Phone = command.Customer.Phone},
+            new Address() {City = command.DeliveryAddress.City, Latitude =  command.DeliveryAddress.Latitude, Longitude = command.DeliveryAddress.Longitude } ,
+            command.Items.Select(x=>  new OrderItem() {Name = x.Name ,  Quantity = x.Quantity, UnitPrice =  new Money {Amount = x.UnitPrice.Amount}} ),
+             new Money() { Amount = command.DeliveryFee.Amount},
             command.EtaMinutes,
             command.RestaurantName,
             command.RestaurantId);

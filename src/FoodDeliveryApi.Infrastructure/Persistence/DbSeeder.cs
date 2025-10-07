@@ -166,7 +166,6 @@ public static class DbSeeder
             // Use root tenant for simplicity
             var order = Order.Place(
                 orderExternalId,
-                rootTenant.Id,
                 customer,
                 address,
                 items,
@@ -247,6 +246,9 @@ public static class DbSeeder
             db.UserPaymentMethods.Add(paymentMethod2);
         }
 
+        // Seed orders
+        await SeedOrdersAsync(db, cancellationToken);
+
         Console.WriteLine("Saving all changes to database...");
         await db.SaveChangesAsync(cancellationToken);
         Console.WriteLine("Database seeding completed successfully!");
@@ -296,6 +298,257 @@ public static class DbSeeder
         }
         
         return restaurantTenants;
+    }
+
+    private static async Task SeedOrdersAsync(SeedingContext db, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("Seeding orders...");
+        
+        // Get existing restaurants
+        var restaurants = await db.Restaurants.Take(5).ToListAsync(cancellationToken);
+        if (!restaurants.Any())
+        {
+            Console.WriteLine("No restaurants found. Skipping order seeding.");
+            return;
+        }
+
+        // Get existing user
+        var user = await db.UserProfiles.FirstOrDefaultAsync(cancellationToken);
+        if (user == null)
+        {
+            Console.WriteLine("No users found. Skipping order seeding.");
+            return;
+        }
+
+        // Create sample orders
+        var orders = new[]
+        {
+            new
+            {
+                ExternalId = "ORD-001",
+                Restaurant = restaurants[0],
+                Status = OrderStatus.Pending,
+                CustomerName = "John Doe",
+                CustomerPhone = "+1 555-0123",
+                Items = new[]
+                {
+                    new { Name = "Margherita Pizza", Quantity = 1, UnitPrice = 15.99m },
+                    new { Name = "Caesar Salad", Quantity = 2, UnitPrice = 8.50m }
+                },
+                DeliveryAddress = new
+                {
+                    Street = "123 Main St",
+                    City = "São Paulo",
+                    State = "SP",
+                    Zip = "01310-100",
+                    Latitude = -23.5613,
+                    Longitude = -46.6565
+                },
+                DeliveryFee = 3.50m,
+                EtaMinutes = 25
+            },
+            new
+            {
+                ExternalId = "ORD-002",
+                Restaurant = restaurants[1],
+                Status = OrderStatus.Confirmed,
+                CustomerName = "Jane Smith",
+                CustomerPhone = "+1 555-0456",
+                Items = new[]
+                {
+                    new { Name = "Big Burger", Quantity = 1, UnitPrice = 12.99m },
+                    new { Name = "French Fries", Quantity = 1, UnitPrice = 4.99m },
+                    new { Name = "Coca Cola", Quantity = 2, UnitPrice = 2.50m }
+                },
+                DeliveryAddress = new
+                {
+                    Street = "456 Oak Ave",
+                    City = "São Paulo",
+                    State = "SP",
+                    Zip = "05435-000",
+                    Latitude = -23.5505,
+                    Longitude = -46.6333
+                },
+                DeliveryFee = 2.99m,
+                EtaMinutes = 20
+            },
+            new
+            {
+                ExternalId = "ORD-003",
+                Restaurant = restaurants[2],
+                Status = OrderStatus.ReadyForPickup,
+                CustomerName = "Mike Johnson",
+                CustomerPhone = "+1 555-0789",
+                Items = new[]
+                {
+                    new { Name = "Salmon Sushi Roll", Quantity = 2, UnitPrice = 18.99m },
+                    new { Name = "Miso Soup", Quantity = 1, UnitPrice = 6.99m }
+                },
+                DeliveryAddress = new
+                {
+                    Street = "789 Pine St",
+                    City = "São Paulo",
+                    State = "SP",
+                    Zip = "04567-890",
+                    Latitude = -23.5705,
+                    Longitude = -46.6433
+                },
+                DeliveryFee = 4.50m,
+                EtaMinutes = 30
+            },
+            new
+            {
+                ExternalId = "ORD-004",
+                Restaurant = restaurants[0],
+                Status = OrderStatus.OutForDelivery,
+                CustomerName = "Sarah Wilson",
+                CustomerPhone = "+1 555-0321",
+                Items = new[]
+                {
+                    new { Name = "Pepperoni Pizza", Quantity = 1, UnitPrice = 17.99m },
+                    new { Name = "Garlic Bread", Quantity = 1, UnitPrice = 5.99m }
+                },
+                DeliveryAddress = new
+                {
+                    Street = "321 Elm St",
+                    City = "São Paulo",
+                    State = "SP",
+                    Zip = "01234-567",
+                    Latitude = -23.5805,
+                    Longitude = -46.6533
+                },
+                DeliveryFee = 3.99m,
+                EtaMinutes = 25
+            },
+            new
+            {
+                ExternalId = "ORD-005",
+                Restaurant = restaurants[3],
+                Status = OrderStatus.Delivered,
+                CustomerName = "David Brown",
+                CustomerPhone = "+1 555-0654",
+                Items = new[]
+                {
+                    new { Name = "Chicken Tacos", Quantity = 3, UnitPrice = 9.99m },
+                    new { Name = "Guacamole", Quantity = 1, UnitPrice = 3.99m }
+                },
+                DeliveryAddress = new
+                {
+                    Street = "654 Maple Dr",
+                    City = "São Paulo",
+                    State = "SP",
+                    Zip = "09876-543",
+                    Latitude = -23.5905,
+                    Longitude = -46.6633
+                },
+                DeliveryFee = 2.50m,
+                EtaMinutes = 15
+            },
+            new
+            {
+                ExternalId = "ORD-006",
+                Restaurant = restaurants[1],
+                Status = OrderStatus.Canceled,
+                CustomerName = "Lisa Davis",
+                CustomerPhone = "+1 555-0987",
+                Items = new[]
+                {
+                    new { Name = "Veggie Burger", Quantity = 1, UnitPrice = 11.99m }
+                },
+                DeliveryAddress = new
+                {
+                    Street = "987 Cedar Ln",
+                    City = "São Paulo",
+                    State = "SP",
+                    Zip = "07654-321",
+                    Latitude = -23.6005,
+                    Longitude = -46.6733
+                },
+                DeliveryFee = 2.99m,
+                EtaMinutes = 20
+            }
+        };
+
+        foreach (var orderData in orders)
+        {
+            // Check if order already exists
+            var existingOrder = await db.Orders.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(o => o.ExternalId == orderData.ExternalId, cancellationToken);
+            
+            if (existingOrder != null) continue;
+
+            // Create customer reference
+            var customer = CustomerRef.Create(
+                user.Id,
+                orderData.CustomerName,
+                orderData.CustomerPhone
+            );
+
+            // Create delivery address
+            var deliveryAddress = Address.Create(
+                orderData.DeliveryAddress.Street,
+                orderData.DeliveryAddress.City,
+                orderData.DeliveryAddress.State,
+                orderData.DeliveryAddress.Zip,
+                orderData.DeliveryAddress.Latitude,
+                orderData.DeliveryAddress.Longitude
+            );
+
+            // Create order items
+            var orderItems = orderData.Items.Select(item => 
+                global::FoodDeliveryApi.FoodDeliveryApi.Domain.ValueObjects.OrderItem.Create(
+                    item.Name,
+                    item.Quantity,
+                    new Money(item.UnitPrice, "DZD")
+                )
+            ).ToList();
+
+            // Create delivery fee
+            var deliveryFee = new Money(orderData.DeliveryFee, "DZD");
+
+            // Create the order
+            var order = Order.Place(
+                orderData.ExternalId,
+                customer,
+                deliveryAddress,
+                orderItems,
+                deliveryFee,
+                orderData.EtaMinutes,
+                orderData.Restaurant.Name,
+                orderData.Restaurant.Id,
+                user.Id
+            );
+
+            // Apply status transitions based on current status
+            switch (orderData.Status)
+            {
+                case OrderStatus.Confirmed:
+                    order.Confirm();
+                    break;
+                case OrderStatus.ReadyForPickup:
+                    order.Confirm();
+                    order.MarkReadyForPickup();
+                    break;
+                case OrderStatus.OutForDelivery:
+                    order.Confirm();
+                    order.MarkReadyForPickup();
+                    order.MoveOutForDelivery();
+                    break;
+                case OrderStatus.Delivered:
+                    order.Confirm();
+                    order.MarkReadyForPickup();
+                    order.MoveOutForDelivery();
+                    order.CompleteDelivery();
+                    break;
+                case OrderStatus.Canceled:
+                    order.Cancel("Customer requested cancellation");
+                    break;
+            }
+
+            db.Orders.Add(order);
+        }
+
+        Console.WriteLine($"Seeded {orders.Length} orders successfully!");
     }
 }
 

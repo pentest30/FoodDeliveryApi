@@ -67,5 +67,22 @@ public class PlaceOrderItemVariantDto
     public decimal VariantPrice { get; set; }
 }
 
+public class OrderStatisticsDto
+{
+    public int TotalOrders { get; set; }
+    public int PendingOrders { get; set; }
+    public int ConfirmedOrders { get; set; }
+    public int ReadyForPickupOrders { get; set; }
+    public int OutForDeliveryOrders { get; set; }
+    public int DeliveredOrders { get; set; }
+    public int CanceledOrders { get; set; }
+    public int FailedOrders { get; set; }
+    public MoneyDto TotalRevenue { get; set; } = new();
+    public MoneyDto AverageOrderValue { get; set; } = new();
+    public int OrdersToday { get; set; }
+    public int OrdersThisWeek { get; set; }
+    public int OrdersThisMonth { get; set; }
+}
+
 
 

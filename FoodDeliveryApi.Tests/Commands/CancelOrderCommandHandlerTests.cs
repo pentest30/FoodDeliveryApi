@@ -183,7 +183,6 @@ public class CancelOrderCommandHandlerTests
     {
         return Order.Place(
             "ORD-12345",
-            "test-tenant",
             new CustomerRef(Guid.NewGuid(), "John Doe", "+1234567890"),
             new Address("123 Main St", "New York", "NY", "10001", 40.7128, -74.0060),
             new List<FoodDeliveryApi.Domain.ValueObjects.OrderItem>

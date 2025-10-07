@@ -71,6 +71,33 @@
 
       <mat-divider class="nav-divider"></mat-divider>
 
+      <!-- Orders Section -->
+      <div class="nav-section">
+        <div class="section-header" (click)="toggleSection('orders')">
+          <mat-icon class="section-icon">receipt_long</mat-icon>
+          <span class="section-title">{{ 'nav.orders' | translate }}</span>
+          <mat-icon class="expand-icon" [class.rotated]="expandedSections().orders">
+            expand_more
+          </mat-icon>
+        </div>
+        <div class="section-content" [class.expanded]="expandedSections().orders">
+          @for (item of sidenavItems[2].items; track item.path) {
+            <a mat-list-item 
+               [routerLink]="item.path" 
+               routerLinkActive="active-nav-item"
+               [matTooltip]="item.label | translate"
+               matTooltipPosition="right"
+               class="nav-item">
+              <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
+              <span matListItemTitle class="nav-text">{{ item.label | translate }}</span>
+              <div class="nav-indicator"></div>
+            </a>
+          }
+        </div>
+      </div>
+
+      <mat-divider class="nav-divider"></mat-divider>
+
       <!-- Resources Section -->
       <div class="nav-section">
         <div class="section-header" (click)="toggleSection('resources')">
@@ -81,7 +108,7 @@
           </mat-icon>
         </div>
         <div class="section-content" [class.expanded]="expandedSections().resources">
-          @for (item of sidenavItems[2].items; track item.path) {
+          @for (item of sidenavItems[3].items; track item.path) {
             <a mat-list-item 
                [routerLink]="item.path" 
                routerLinkActive="active-nav-item"

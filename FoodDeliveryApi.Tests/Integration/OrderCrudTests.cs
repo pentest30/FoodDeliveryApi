@@ -342,7 +342,6 @@ public class OrderCrudTests : IntegrationTestBase
     {
         var order = Order.Place(
             "test-order-001",
-            TestTenantId,
             new CustomerRef(Guid.NewGuid(), "Test Customer", "+1234567890"),
             new Address("123 Test St", "Test City", "TS", "12345", 40.7128, -74.0060),
             new List<FoodDeliveryApi.Domain.ValueObjects.OrderItem>

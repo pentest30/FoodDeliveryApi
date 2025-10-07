@@ -1,6 +1,7 @@
 using FoodDeliveryApi.FoodDeliveryApi.Application.Interfaces;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.Orders;
 using FoodDeliveryApi.FoodDeliveryApi.Domain.ValueObjects;
+using FoodDeliveryApi.Api.Dtos;
 
 namespace FoodDeliveryApi.FoodDeliveryApi.Application.Services;
 
@@ -28,8 +29,8 @@ public class OrderService
         string externalId,
         string tenantId,
         CustomerRef customer,
-        global::FoodDeliveryApi.FoodDeliveryApi.Domain.ValueObjects.Address deliveryAddress,
-        IEnumerable<global::FoodDeliveryApi.FoodDeliveryApi.Domain.ValueObjects.OrderItem> items,
+        Address deliveryAddress,
+        IEnumerable<Domain.ValueObjects.OrderItem> items,
         Money deliveryFee,
         int etaMinutes,
         string restaurantName,
@@ -47,7 +48,6 @@ public class OrderService
 
         var order = Order.Place(
             externalId,
-            tenantId,
             customer,
             deliveryAddress,
             valueObjectItems,
@@ -122,5 +122,52 @@ public class OrderService
     public async Task<bool> DeleteAsync(string externalId, CancellationToken ct)
     {
         return await _repository.DeleteAsync(externalId, ct);
+    }
+
+    public async Task<OrderStatisticsDto> GetOrderStatisticsAsync(CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var today = now.Date;
+        var weekStart = today.AddDays(-(int)today.DayOfWeek);
+        var monthStart = new DateTimeOffset(today.Year, today.Month, 1, 0, 0, 0, now.Offset);
+
+        // Get all orders for statistics
+        var (allOrders, _) = await _repository.SearchAsync(null, null, null, null, 1, int.MaxValue, ct);
+        
+        var totalOrders = allOrders.Count;
+        var pendingOrders = allOrders.Count(o => o.Status == OrderStatus.Pending);
+        var confirmedOrders = allOrders.Count(o => o.Status == OrderStatus.Confirmed);
+        var readyForPickupOrders = allOrders.Count(o => o.Status == OrderStatus.ReadyForPickup);
+        var outForDeliveryOrders = allOrders.Count(o => o.Status == OrderStatus.OutForDelivery);
+        var deliveredOrders = allOrders.Count(o => o.Status == OrderStatus.Delivered);
+        var canceledOrders = allOrders.Count(o => o.Status == OrderStatus.Canceled);
+        var failedOrders = allOrders.Count(o => o.Status == OrderStatus.Failed);
+
+        // Calculate revenue from delivered orders only
+        var deliveredOrdersList = allOrders.Where(o => o.Status == OrderStatus.Delivered).ToList();
+        var totalRevenue = deliveredOrdersList.Sum(o => o.Total.Amount);
+        var averageOrderValue = deliveredOrdersList.Any() ? totalRevenue / deliveredOrdersList.Count : 0;
+
+        // Time-based statistics
+        var ordersToday = allOrders.Count(o => o.CreatedAt.Date == today);
+        var ordersThisWeek = allOrders.Count(o => o.CreatedAt >= weekStart);
+        var ordersThisMonth = allOrders.Count(o => o.CreatedAt >= monthStart);
+
+        return new OrderStatisticsDto
+        {
+            TotalOrders = totalOrders,
+            PendingOrders = pendingOrders,
+            ConfirmedOrders = confirmedOrders,
+            ReadyForPickupOrders = readyForPickupOrders,
+            OutForDeliveryOrders = outForDeliveryOrders,
+            DeliveredOrders = deliveredOrders,
+            CanceledOrders = canceledOrders,
+            FailedOrders = failedOrders,
+            TotalRevenue = new MoneyDto { Amount = totalRevenue, Currency = "DZD" },
+            AverageOrderValue = new MoneyDto { Amount = averageOrderValue, Currency = "DZD" },
+            OrdersToday = ordersToday,
+            OrdersThisWeek = ordersThisWeek,
+            OrdersThisMonth = ordersThisMonth
+        };
     }
 }
